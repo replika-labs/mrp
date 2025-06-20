@@ -1,26 +1,29 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import {
-  BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer, Legend
-} from 'recharts';
-import {
-  AlertTriangle,
-  Clock,
-  TrendingUp,
-  Package,
-  Users,
-  Target,
-  ExternalLink,
-  Calendar,
   Activity,
-  Plus,
-  ChevronRight,
+  AlertCircle,
+  AlertTriangle,
   Box,
-  AlertCircle
+  ChevronRight,
+  Clock,
+  Package,
+  Plus,
+  Target,
+  TrendingUp
 } from 'lucide-react';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis, YAxis
+} from 'recharts';
 
 const API_ENDPOINTS = {
   DASHBOARD_SUMMARY: '/api/dashboard/summary',
@@ -235,7 +238,7 @@ export default function DashboardPage() {
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-2">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">
-            Welcome back, {user?.companyName || 'Administrator'}! 👋
+            Welcome back, {user?.name || 'Administrator'}! 👋
           </h1>
           <p className="text-base-content/70 mt-2">
             Here&apos;s what&apos;s happening with your warehouse today.
