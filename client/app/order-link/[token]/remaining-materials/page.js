@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 export default function RemainingMaterialsPage({ params }) {
-  const { token } = params;
+  const { token } = use(params);
   const router = useRouter();
   const [orderLink, setOrderLink] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -209,6 +209,14 @@ export default function RemainingMaterialsPage({ params }) {
               </p>
             </div>
             <div className="flex items-center space-x-4">
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+                Back
+              </button>
               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${Order.status === 'completed' ? 'bg-green-100 text-green-800' :
                 Order.status === 'processing' ? 'bg-yellow-100 text-yellow-800' :
                   Order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
@@ -229,29 +237,23 @@ export default function RemainingMaterialsPage({ params }) {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white shadow overflow-hidden rounded-lg">
-          <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900">Remaining Material Report</h2>
-            <p className="mt-1 text-sm text-gray-500">
+        <div className="bg-gradient-to-br from-white/80 via-white/90 to-white/80 backdrop-blur-xl rounded-2xl border border-gray-200 shadow-lg p-8 mb-6">
+          <div className="mb-4 border-b border-gray-100 pb-2">
+            <h2 className="text-xl font-bold text-base-content mb-1">Remaining Material Report</h2>
+            <p className="text-sm text-base-content/60">
               Report any remaining materials after order completion to help with inventory management.
             </p>
           </div>
-          <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
+          <div>
             {!isCompleted ? (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-6">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <div className="ml-3">
-                    <h3 className="text-sm font-medium text-yellow-800">Order Not Completed</h3>
-                    <div className="mt-2 text-sm text-yellow-700">
-                      <p>
-                        This order is not yet marked as completed. Remaining materials should only be reported after the order is complete.
-                      </p>
-                    </div>
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-6 flex items-start gap-3">
+                <svg className="h-6 w-6 text-yellow-400 mt-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                <div>
+                  <h3 className="text-sm font-bold text-yellow-800">Order Not Completed</h3>
+                  <div className="mt-1 text-sm text-yellow-700">
+                    This order is not yet marked as completed. Remaining materials should only be reported after the order is complete.
                   </div>
                 </div>
               </div>
@@ -288,36 +290,30 @@ export default function RemainingMaterialsPage({ params }) {
                   </div>
                 )}
 
-                {/* Remaining Material Quantity */}
+                {/* Input group for qtyRemaining */}
                 <div>
-                  <label htmlFor="qtyRemaining" className="block text-sm font-medium text-gray-700">
-                    Remaining Material Quantity *
-                  </label>
-                  <div className="mt-1 flex rounded-md shadow-sm">
+                  <label htmlFor="qtyRemaining" className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Qty Remaining</label>
+                  <div className="flex rounded-lg shadow-sm">
                     <input
                       type="number"
                       name="qtyRemaining"
                       id="qtyRemaining"
                       min="0"
-                      step="0.001"
                       value={formData.qtyRemaining}
                       onChange={handleChange}
-                      className="flex-1 focus:ring-blue-500 focus:border-blue-500 block w-full min-w-0 rounded-md sm:text-sm border-gray-300"
+                      className="flex-1 focus:ring-blue-500 focus:border-blue-500 block w-full min-w-0 rounded-l-lg rounded-r-none sm:text-sm border border-gray-300 bg-gray-50 text-gray-900 py-3 px-4 transition-all h-12"
                       required
                     />
-                    <span className="inline-flex items-center px-3 rounded-r-md border border-l-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
-                      units
+                    <span className="inline-flex items-center px-3 rounded-r-lg border border-l-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm h-12 -ml-px">
+                      pcs
                     </span>
                   </div>
-                  <p className="mt-1 text-xs text-gray-500">
-                    Enter the quantity of remaining material.
-                  </p>
                 </div>
 
                 {/* Photo Upload */}
                 <div>
                   <label htmlFor="photoUrl" className="block text-sm font-medium text-gray-700">
-                    Photo of Remaining Material *
+                    Photo of Remaining Material <span className="text-red-600">*</span>
                   </label>
                   <div className="mt-1 flex items-center">
                     <input
@@ -355,7 +351,7 @@ export default function RemainingMaterialsPage({ params }) {
                     value={formData.note}
                     onChange={handleChange}
                     placeholder="Any notes about the remaining fabric..."
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-gray-50 text-gray-900"
                   ></textarea>
                 </div>
 

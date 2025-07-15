@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { use } from 'react';
 
 export default function OrderLinkPage({ params }) {
-  const { token } = params;
+  const { token } = use(params);
   const [orderLink, setOrderLink] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -360,306 +361,210 @@ export default function OrderLinkPage({ params }) {
   const { order: Order, user: User } = orderLink;
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-primary/5 via-white/80 to-secondary/5">
       {/* Header */}
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Order: {Order.orderNumber}</h1>
-              <p className="mt-1 text-sm text-gray-600">
-                Assigned to: {User.name}
-              </p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${Order.status === 'completed' ? 'bg-green-100 text-green-800' :
-                Order.status === 'processing' ? 'bg-yellow-100 text-yellow-800' :
-                  Order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                    'bg-blue-100 text-blue-800'
-                }`}>
-                {Order.status}
+      <header className="w-full bg-gradient-to-br from-primary/10 via-white/80 to-secondary/10 backdrop-blur-xl border-b border-gray-200 shadow-xl rounded-b-3xl px-0 py-8 mb-8">
+        <div className="max-w-5xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4 px-6">
+          <div className="flex flex-col gap-1">
+            <h1 className="text-2xl md:text-3xl font-bold text-base-content bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent leading-tight">
+              Order: {orderLink?.order?.orderNumber || '...'}
+            </h1>
+            <span className="text-base-content/60 text-sm">Assigned to: {orderLink?.user?.name || '-'}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            {orderLink?.order?.status && (
+              <span className="px-3 py-1 rounded-lg bg-blue-100 text-blue-700 text-xs font-semibold">
+                {orderLink.order.status}
               </span>
-              <span className="text-sm text-gray-500">
-                Due: {formatDate(Order.dueDate)}
+            )}
+            {orderLink?.order?.dueDate && (
+              <span className="px-3 py-1 rounded-lg bg-gray-100 text-gray-700 text-xs font-medium">
+                Due: {new Date(orderLink.order.dueDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
               </span>
-            </div>
+            )}
           </div>
         </div>
       </header>
-
-      {/* Tabs */}
-      <div className="border-b border-gray-200 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex -mb-px">
-            <button
-              onClick={() => setActiveTab('details')}
-              className={`py-4 px-6 border-b-2 font-medium text-sm ${activeTab === 'details'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-            >
-              Order Details
-            </button>
-            <button
-              onClick={() => setActiveTab('materials')}
-              className={`py-4 px-6 border-b-2 font-medium text-sm ${activeTab === 'materials'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-            >
-              Material Receipt
-            </button>
-            <button
-              onClick={() => setActiveTab('progress')}
-              className={`py-4 px-6 border-b-2 font-medium text-sm ${activeTab === 'progress'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-            >
-              Progress Report
-            </button>
-            <button
-              onClick={() => setActiveTab('material-usage')}
-              className={`py-4 px-6 border-b-2 font-medium text-sm ${activeTab === 'material-usage'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-            >
-              Material Usage
-            </button>
-            <Link
-              href={`/order-link/${token}/remaining-materials`}
-              className="py-4 px-6 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            >
-              Remaining Materials
-            </Link>
-          </nav>
-        </div>
-      </div>
-
-      {/* Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Order Details Tab */}
-        {activeTab === 'details' && (
-          <div className="bg-white shadow overflow-hidden rounded-lg">
-            <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">Order Details</h2>
-              <p className="mt-1 text-sm text-gray-500">Details and specifications for this order.</p>
-            </div>
-            <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
-              <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Order Number</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{Order.orderNumber}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Status</dt>
-                  <dd className="mt-1 text-sm">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${Order.status === 'completed' ? 'bg-green-100 text-green-800' :
-                      Order.status === 'processing' ? 'bg-yellow-100 text-yellow-800' :
-                        Order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                          'bg-blue-100 text-blue-800'
-                      }`}>
-                      {Order.status}
-                    </span>
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Target Quantity</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{Order.targetPcs} pcs</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Due Date</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{formatDate(Order.dueDate)}</dd>
-                </div>
-                <div className="sm:col-span-2">
-                  <dt className="text-sm font-medium text-gray-500">Description</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{Order.description || 'No description provided'}</dd>
-                </div>
-                <div className="sm:col-span-2">
-                  <dt className="text-sm font-medium text-gray-500">Customer Note</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{Order.customerNote || 'No customer notes'}</dd>
-                </div>
-              </dl>
+      <main className="flex-1 max-w-5xl mx-auto w-full px-4 pb-12">
+        <div className="bg-gradient-to-br from-white/95 via-white/90 to-white/95 backdrop-blur-xl rounded-3xl border border-gray-200 shadow-xl p-8">
+          {/* Tabs */}
+          <div className="border-b border-gray-200 bg-white">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <nav className="flex -mb-px">
+                <button
+                  onClick={() => setActiveTab('details')}
+                  className={`py-4 px-6 border-b-2 font-medium text-sm ${activeTab === 'details'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                >
+                  Order Details
+                </button>
+                <button
+                  onClick={() => setActiveTab('materials')}
+                  className={`py-4 px-6 border-b-2 font-medium text-sm ${activeTab === 'materials'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                >
+                  Material Receipt
+                </button>
+                <button
+                  onClick={() => setActiveTab('progress')}
+                  className={`py-4 px-6 border-b-2 font-medium text-sm ${activeTab === 'progress'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                >
+                  Progress Report
+                </button>
+                <button
+                  onClick={() => setActiveTab('material-usage')}
+                  className={`py-4 px-6 border-b-2 font-medium text-sm ${activeTab === 'material-usage'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                >
+                  Material Usage
+                </button>
+                <Link
+                  href={`/order-link/${token}/remaining-materials`}
+                  className="py-4 px-6 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                >
+                  Remaining Materials
+                </Link>
+              </nav>
             </div>
           </div>
-        )}
 
-        {/* Material Receipt Tab */}
-        {activeTab === 'materials' && (
-          <div className="bg-white shadow overflow-hidden rounded-lg">
-            <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">Material Receipt Confirmation</h2>
-              <p className="mt-1 text-sm text-gray-500">Please confirm when you receive the materials for this order.</p>
-            </div>
-            <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
-              {/* Material Receipt Form */}
-              <form onSubmit={handleMaterialSubmit} className="space-y-6">
-                {/* Form success/error messages */}
-                {materialForm.success && (
-                  <div className="bg-green-50 border border-green-200 rounded-md p-4">
-                    <div className="flex">
-                      <div className="flex-shrink-0">
-                        <svg className="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                      <div className="ml-3">
-                        <p className="text-sm font-medium text-green-800">{materialForm.success}</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {materialForm.error && (
-                  <div className="bg-red-50 border border-red-200 rounded-md p-4">
-                    <div className="flex">
-                      <div className="flex-shrink-0">
-                        <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                      <div className="ml-3">
-                        <p className="text-sm font-medium text-red-800">{materialForm.error}</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Photo Upload */}
+          {/* Content */}
+          {/* Order Details Tab */}
+          {activeTab === 'details' && (
+            <div className="bg-gradient-to-br from-white/80 via-white/90 to-white/80 backdrop-blur-xl rounded-2xl border border-gray-200 shadow-lg p-8 mb-6">
+              <div className="mb-4 border-b border-gray-100 pb-2">
+                <h2 className="text-xl font-bold text-base-content mb-1">Order Details</h2>
+                <p className="text-sm text-base-content/60">Details and specifications for this order.</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
                 <div>
-                  <label htmlFor="photoUrl" className="block text-sm font-medium text-gray-700">
-                    Receipt Photo
-                  </label>
-                  <div className="mt-1 flex items-center">
-                    <input
-                      type="file"
-                      id="photoUrl"
-                      name="photoUrl"
-                      accept="image/*"
-                      onChange={handleFileChange}
-                      className="sr-only"
-                    />
-                    <label
-                      htmlFor="photoUrl"
-                      className="relative cursor-pointer bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
-                    >
+                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Order Number</div>
+                  <div className="text-base font-medium text-base-content">{Order.orderNumber}</div>
+                </div>
+                <div>
+                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Status</div>
+                  <span className="inline-block px-3 py-1 rounded-lg bg-blue-100 text-blue-700 text-xs font-bold shadow-sm">
+                    {Order.status}
+                  </span>
+                </div>
+                <div>
+                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Target Quantity</div>
+                  <div className="text-base font-medium text-base-content">{Order.targetPcs} pcs</div>
+                </div>
+                <div>
+                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Due Date</div>
+                  <div className="text-base font-medium text-base-content">{formatDate(Order.dueDate)}</div>
+                </div>
+                <div className="md:col-span-2 mt-2">
+                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Description</div>
+                  <div className="text-base text-base-content">{Order.description || <span className='text-base-content/40 italic'>No description provided</span>}</div>
+                </div>
+                <div className="md:col-span-2 mt-2">
+                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Customer Note</div>
+                  <div className="text-base text-base-content">{Order.customerNote || <span className='text-base-content/40 italic'>No customer notes</span>}</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Material Receipt Tab */}
+          {activeTab === 'materials' && (
+            <div className="bg-gradient-to-br from-white/80 via-white/90 to-white/80 backdrop-blur-xl rounded-2xl border border-gray-200 shadow-lg p-8 mb-6">
+              <div className="mb-4 border-b border-gray-100 pb-2">
+                <h2 className="text-xl font-bold text-base-content mb-1">Material Receipt Confirmation</h2>
+                <p className="text-sm text-base-content/60">Please confirm when you receive the materials for this order.</p>
+              </div>
+              <form onSubmit={handleMaterialSubmit} className="space-y-6">
+                <div>
+                  <label htmlFor="photoUrl" className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Receipt Photo</label>
+                  <div className="flex items-center gap-3">
+                    <input type="file" id="photoUrl" name="photoUrl" accept="image/*" onChange={handleFileChange} className="sr-only" />
+                    <label htmlFor="photoUrl" className="relative cursor-pointer bg-white py-2 px-3 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500 transition-all">
                       <span>Upload a photo</span>
                     </label>
-                    <p className="ml-3 text-sm text-gray-500">
-                      {materialForm.photoUrl ? materialForm.photoUrl : 'No file selected'}
-                    </p>
+                    <span className="text-sm text-gray-500">{materialForm.photoUrl ? materialForm.photoUrl : 'No file selected'}</span>
                   </div>
-                  <p className="mt-1 text-xs text-gray-500">
-                    Take a photo of the received materials to confirm receipt.
-                  </p>
+                  <p className="mt-1 text-xs text-gray-400">Take a photo of the received materials to confirm receipt.</p>
                 </div>
-
-                {/* Notes */}
                 <div>
-                  <label htmlFor="note" className="block text-sm font-medium text-gray-700">
-                    Notes
-                  </label>
-                  <textarea
-                    id="note"
-                    name="note"
-                    rows={3}
-                    value={materialForm.note}
-                    onChange={handleMaterialFormChange}
-                    placeholder="Any notes about the received materials..."
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  ></textarea>
+                  <label htmlFor="note" className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Notes</label>
+                  <textarea id="note" name="note" rows={3} value={materialForm.note} onChange={handleMaterialFormChange} placeholder="Any notes about the received materials..." className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-3 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-gray-50 text-gray-900 transition-all" />
                 </div>
-
-                {/* Confirmation Checkbox */}
-                <div className="flex items-start">
-                  <div className="flex items-center h-5">
-                    <input
-                      id="confirmed"
-                      name="confirmed"
-                      type="checkbox"
-                      checked={materialForm.confirmed}
-                      onChange={handleMaterialFormChange}
-                      className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded"
-                    />
-                  </div>
-                  <div className="ml-3 text-sm">
-                    <label htmlFor="confirmed" className="font-medium text-gray-700">
-                      I confirm that I have received all materials for this order
-                    </label>
-                    <p className="text-gray-500">
-                      By checking this box, you confirm that all required materials for this order have been received.
-                    </p>
+                <div className="flex items-start gap-3">
+                  <input id="confirmed" name="confirmed" type="checkbox" checked={materialForm.confirmed} onChange={handleMaterialFormChange} className="focus:ring-blue-500 h-5 w-5 text-blue-600 border border-gray-300 rounded-lg transition-all" />
+                  <div className="text-sm">
+                    <label htmlFor="confirmed" className="font-medium text-base-content">I confirm that I have received all materials for this order</label>
+                    <p className="text-gray-400 text-xs">By checking this box, you confirm that all required materials for this order have been received.</p>
                   </div>
                 </div>
-
-                {/* Submit Button */}
-                <div>
-                  <button
-                    type="submit"
-                    disabled={materialForm.isSubmitting || !materialForm.confirmed}
-                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {materialForm.isSubmitting ? 'Submitting...' : 'Confirm Material Receipt'}
-                  </button>
-                </div>
+                <button type="submit" disabled={materialForm.isSubmitting || !materialForm.confirmed} className="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow font-semibold text-base text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+                  {materialForm.isSubmitting ? 'Submitting...' : 'Confirm Material Receipt'}
+                </button>
+                {materialForm.success && (
+                  <div className="bg-green-50 border border-green-200 rounded-md p-4 mt-2">
+                    <div className="flex items-center gap-2">
+                      <svg className="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                      <span className="text-sm font-medium text-green-800">{materialForm.success}</span>
+                    </div>
+                  </div>
+                )}
+                {materialForm.error && (
+                  <div className="bg-red-50 border border-red-200 rounded-md p-4 mt-2">
+                    <div className="flex items-center gap-2">
+                      <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>
+                      <span className="text-sm font-medium text-red-800">{materialForm.error}</span>
+                    </div>
+                  </div>
+                )}
               </form>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Material Usage Tab */}
-        {activeTab === 'material-usage' && (
-          <div className="bg-white shadow overflow-hidden rounded-lg">
-            <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">Material Usage</h2>
-              <p className="mt-1 text-gray-500">Record materials used for this order.</p>
-            </div>
-            <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
-              {/* Material Usage Form */}
+          {/* Material Usage Tab */}
+          {activeTab === 'material-usage' && (
+            <div className="bg-gradient-to-br from-white/80 via-white/90 to-white/80 backdrop-blur-xl rounded-2xl border border-gray-200 shadow-lg p-8 mb-6">
+              <div className="mb-4 border-b border-gray-100 pb-2">
+                <h2 className="text-xl font-bold text-base-content mb-1">Material Usage</h2>
+                <p className="text-sm text-base-content/60">Record materials used for this order.</p>
+              </div>
               <form onSubmit={handleMaterialUsageSubmit} className="space-y-6">
                 {/* Form success/error messages */}
                 {materialUsageForm.success && (
                   <div className="bg-green-50 border border-green-200 rounded-md p-4">
-                    <div className="flex">
-                      <div className="flex-shrink-0">
-                        <svg className="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                      <div className="ml-3">
-                        <p className="text-sm font-medium text-green-800">{materialUsageForm.success}</p>
-                      </div>
+                    <div className="flex items-center gap-2">
+                      <svg className="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                      <span className="text-sm font-medium text-green-800">{materialUsageForm.success}</span>
                     </div>
                   </div>
                 )}
-
                 {materialUsageForm.error && (
                   <div className="bg-red-50 border border-red-200 rounded-md p-4">
-                    <div className="flex">
-                      <div className="flex-shrink-0">
-                        <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                      <div className="ml-3">
-                        <p className="text-sm font-medium text-red-800">{materialUsageForm.error}</p>
-                      </div>
+                    <div className="flex items-center gap-2">
+                      <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>
+                      <span className="text-sm font-medium text-red-800">{materialUsageForm.error}</span>
                     </div>
                   </div>
                 )}
-
                 {/* Material Selection */}
                 <div>
-                  <label htmlFor="materialId" className="block text-sm font-medium text-gray-700">
-                    Material *
+                  <label htmlFor="materialId" className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                    Material <span className="text-red-600">*</span>
                   </label>
                   <select
                     id="materialId"
                     name="materialId"
                     value={materialUsageForm.materialId}
                     onChange={handleMaterialUsageChange}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-3 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-gray-50 text-gray-900 transition-all"
                     required
                   >
                     <option value="">Select a material</option>
@@ -670,13 +575,12 @@ export default function OrderLinkPage({ params }) {
                     ))}
                   </select>
                 </div>
-
                 {/* Quantity */}
                 <div>
-                  <label htmlFor="quantity" className="block text-sm font-medium text-gray-700">
-                    Quantity Used *
+                  <label htmlFor="quantity" className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                    Quantity Used <span className="text-red-600">*</span>
                   </label>
-                  <div className="mt-1 flex rounded-md shadow-sm">
+                  <div className="mt-1 flex rounded-lg shadow-sm">
                     <input
                       type="number"
                       name="quantity"
@@ -685,18 +589,17 @@ export default function OrderLinkPage({ params }) {
                       step="0.001"
                       value={materialUsageForm.quantity}
                       onChange={handleMaterialUsageChange}
-                      className="flex-1 focus:ring-blue-500 focus:border-blue-500 block w-full min-w-0 rounded-md sm:text-sm border-gray-300"
+                      className="flex-1 focus:ring-blue-500 focus:border-blue-500 block w-full min-w-0 rounded-lg sm:text-sm border border-gray-300 bg-gray-50 text-gray-900 py-3 px-4 transition-all"
                       required
                     />
-                    <span className="inline-flex items-center px-3 rounded-r-md border border-l-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
+                    <span className="inline-flex items-center px-3 rounded-r-lg border border-l-0 border-gray-200 bg-gray-50 text-gray-500 sm:text-sm">
                       {materials.find(m => m.id === parseInt(materialUsageForm.materialId))?.unit || 'units'}
                     </span>
                   </div>
                 </div>
-
                 {/* Notes */}
                 <div>
-                  <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="notes" className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
                     Notes
                   </label>
                   <textarea
@@ -705,288 +608,159 @@ export default function OrderLinkPage({ params }) {
                     rows={3}
                     value={materialUsageForm.notes}
                     onChange={handleMaterialUsageChange}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-3 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-gray-50 text-gray-900 transition-all"
                     placeholder="Add any notes about this material usage..."
                   ></textarea>
                 </div>
-
                 {/* Submit Button */}
                 <div>
                   <button
                     type="submit"
                     disabled={materialUsageForm.isSubmitting || !materialUsageForm.materialId || materialUsageForm.quantity <= 0}
-                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow font-semibold text-base text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                   >
                     {materialUsageForm.isSubmitting ? 'Recording...' : 'Record Material Usage'}
                   </button>
                 </div>
               </form>
-
               {/* Material Usage History */}
-              <div className="mt-10">
-                <h3 className="text-base font-medium text-gray-900 mb-4">Material Usage History</h3>
+              <div className="mt-10 bg-gradient-to-br from-white/90 via-white/95 to-white/90 backdrop-blur-xl rounded-2xl border border-gray-100 shadow p-6 mb-6">
+                <h3 className="text-lg font-bold text-base-content mb-4">Material Usage History</h3>
                 {orderLink?.order?.materialMovements && orderLink.order.materialMovements.length > 0 ? (
-                  <div className="flow-root">
-                    <ul className="-mb-8">
-                      {orderLink.order.materialMovements.map((movement, movementIdx) => (
-                        <li key={movement.id}>
-                          <div className="relative pb-8">
-                            {movementIdx !== orderLink.order.materialMovements.length - 1 ? (
-                              <span className="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
-                            ) : null}
-                            <div className="relative flex space-x-3">
-                              <div>
-                                <span className="h-8 w-8 rounded-full bg-red-500 flex items-center justify-center ring-8 ring-white">
-                                  <svg className="h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                    <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-                                  </svg>
-                                </span>
-                              </div>
-                              <div className="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
-                                <div>
-                                  <p className="text-sm text-gray-500">
-                                    Used <span className="font-medium text-gray-900">{movement.quantity} {movement.unit}</span> of{' '}
-                                    <span className="font-medium text-gray-900">{movement.material.name}</span>
-                                    {movement.notes && <span> - {movement.notes}</span>}
-                                  </p>
-                                </div>
-                                <div className="text-right text-sm whitespace-nowrap text-gray-500">
-                                  {formatDate(movement.movementDate)}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                  <ul>
+                    {orderLink.order.materialMovements.map((movement, movementIdx) => (
+                      <li key={movement.id} className="flex items-start gap-4 py-4 border-b border-gray-100 last:border-b-0">
+                        <span className="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center">
+                          <svg className="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                          </svg>
+                        </span>
+                        <div className="flex-1">
+                          <div className="font-semibold text-base-content">Used {movement.quantity} {movement.unit} of {movement.material.name}</div>
+                          {movement.notes && <div className="text-sm text-base-content/70">{movement.notes}</div>}
+                        </div>
+                        <div className="text-xs text-gray-400 italic whitespace-nowrap mt-1">{formatDate(movement.movementDate)}</div>
+                      </li>
+                    ))}
+                  </ul>
                 ) : (
-                  <p className="text-sm text-gray-500 text-center py-4">No material usage recorded yet.</p>
+                  <div className="flex flex-col items-center justify-center py-8">
+                    <svg className="h-8 w-8 text-gray-300 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z" /></svg>
+                    <div className="text-sm text-gray-400 text-center">No material usage recorded yet.</div>
+                  </div>
                 )}
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Progress Report Tab */}
-        {activeTab === 'progress' && (
-          <div className="bg-white shadow overflow-hidden rounded-lg">
-            <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">Progress Report</h2>
-              <p className="mt-1 text-sm text-gray-500">Report your production progress on this order.</p>
-            </div>
-            <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
-              {/* Current Progress */}
+          {/* Progress Report Tab */}
+          {activeTab === 'progress' && (
+            <div className="bg-gradient-to-br from-white/80 via-white/90 to-white/80 backdrop-blur-xl rounded-2xl border border-gray-200 shadow-lg p-8 mb-6">
+              <div className="mb-4 border-b border-gray-100 pb-2">
+                <h2 className="text-xl font-bold text-base-content mb-1">Progress Report</h2>
+                <p className="text-sm text-base-content/60">Report your production progress on this order.</p>
+              </div>
               <div className="mb-6">
-                <h3 className="text-base font-medium text-gray-900 mb-2">Current Progress</h3>
-                <div className="flex items-center mb-2">
-                  <div className="w-full bg-gray-200 rounded-full h-2.5 mr-2 flex-grow">
-                    <div
-                      className={`h-2.5 rounded-full ${Order.completedPcs / Order.targetPcs < 0.3
-                        ? 'bg-red-500'
-                        : Order.completedPcs / Order.targetPcs < 0.7
-                          ? 'bg-yellow-500'
-                          : 'bg-green-500'
-                        }`}
-                      style={{ width: `${Math.round((Order.completedPcs / Order.targetPcs) * 100)}%` }}
-                    ></div>
+                <h3 className="text-base font-semibold text-base-content mb-2">Current Progress</h3>
+                <div className="flex items-center mb-2 gap-3">
+                  <div className="w-full bg-gray-200 rounded-full h-4">
+                    <div className={`h-4 rounded-full transition-all duration-300 ${Order.completedPcs / Order.targetPcs < 0.3 ? 'bg-red-400' : Order.completedPcs / Order.targetPcs < 0.7 ? 'bg-yellow-400' : 'bg-green-500'}`} style={{ width: `${Math.round((Order.completedPcs / Order.targetPcs) * 100)}%` }}></div>
                   </div>
-                  <span className="text-sm font-medium text-gray-900">
-                    {Math.round((Order.completedPcs / Order.targetPcs) * 100)}% ({Order.completedPcs}/{Order.targetPcs} pcs)
-                  </span>
+                  <span className="text-sm font-bold text-base-content whitespace-nowrap">{Math.round((Order.completedPcs / Order.targetPcs) * 100)}% <span className="font-normal">({Order.completedPcs}/{Order.targetPcs} pcs)</span></span>
                 </div>
               </div>
-
-              {/* Progress Report Form */}
               <form onSubmit={handleProgressSubmit} className="space-y-6">
-                {/* Form success/error messages */}
-                {progressForm.success && (
-                  <div className="bg-green-50 border border-green-200 rounded-md p-4">
-                    <div className="flex">
-                      <div className="flex-shrink-0">
-                        <svg className="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                      <div className="ml-3">
-                        <p className="text-sm font-medium text-green-800">{progressForm.success}</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {progressForm.error && (
-                  <div className="bg-red-50 border border-red-200 rounded-md p-4">
-                    <div className="flex">
-                      <div className="flex-shrink-0">
-                        <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                      <div className="ml-3">
-                        <p className="text-sm font-medium text-red-800">{progressForm.error}</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Completed Pieces */}
                 <div>
-                  <label htmlFor="pcsFinished" className="block text-sm font-medium text-gray-700">
-                    Completed Pieces *
-                  </label>
-                  <div className="mt-1 flex rounded-md shadow-sm">
-                    <input
-                      type="number"
-                      name="pcsFinished"
-                      id="pcsFinished"
-                      min="1"
-                      max={Order.targetPcs - Order.completedPcs}
-                      value={progressForm.pcsFinished}
-                      onChange={handleProgressFormChange}
-                      className="flex-1 focus:ring-blue-500 focus:border-blue-500 block w-full min-w-0 rounded-md sm:text-sm border-gray-300"
-                      required
-                    />
-                    <span className="inline-flex items-center px-3 rounded-r-md border border-l-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
-                      pcs
-                    </span>
+                  <label htmlFor="pcsFinished" className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Completed Pieces *</label>
+                  <div className="flex items-center gap-2">
+                    <input type="number" name="pcsFinished" id="pcsFinished" min="1" max={Order.targetPcs - Order.completedPcs} value={progressForm.pcsFinished} onChange={handleProgressFormChange} className="flex-1 focus:ring-blue-500 focus:border-blue-500 block w-full min-w-0 rounded-lg sm:text-sm border-2 border-gray-300 bg-gray-50 text-gray-900 py-3 px-4 shadow-sm transition-all" required />
+                    <span className="inline-flex items-center px-3 rounded-md border border-l-0 border-gray-200 bg-gray-50 text-gray-500 sm:text-sm">pcs</span>
                   </div>
-                  <p className="mt-1 text-xs text-gray-500">
-                    Maximum: {Order.targetPcs - Order.completedPcs} pcs remaining
-                  </p>
+                  <p className="mt-1 text-xs text-gray-400">Maximum: {Order.targetPcs - Order.completedPcs} pcs remaining</p>
                 </div>
-
-                {/* Progress Photo */}
                 <div>
-                  <label htmlFor="progressPhoto" className="block text-sm font-medium text-gray-700">
-                    Progress Photo
-                  </label>
-                  <div className="mt-1 flex items-center">
-                    <input
-                      type="file"
-                      id="progressPhoto"
-                      name="progressPhoto"
-                      accept="image/*"
-                      onChange={handleProgressPhotoChange}
-                      className="sr-only"
-                    />
-                    <label
-                      htmlFor="progressPhoto"
-                      className="relative cursor-pointer bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
-                    >
+                  <label htmlFor="progressPhoto" className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Progress Photo</label>
+                  <div className="flex items-center gap-3">
+                    <input type="file" id="progressPhoto" name="progressPhoto" accept="image/*" onChange={handleProgressPhotoChange} className="sr-only" />
+                    <label htmlFor="progressPhoto" className="relative cursor-pointer bg-gray-50 py-2 px-4 border-2 border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-900 hover:bg-gray-100 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500 transition-all">
                       <span>Upload a photo</span>
                     </label>
-                    <p className="ml-3 text-sm text-gray-500">
-                      {progressForm.photoUrl ? progressForm.photoUrl : 'No file selected'}
-                    </p>
+                    <span className="text-sm text-gray-500">{progressForm.photoUrl ? progressForm.photoUrl : 'No file selected'}</span>
                   </div>
-                  <p className="mt-1 text-xs text-gray-500">
-                    Take a photo of the completed pieces to verify progress.
-                  </p>
+                  <p className="mt-1 text-xs text-gray-400">Take a photo of the completed pieces to verify progress.</p>
                 </div>
-
-                {/* Shipping Receipt (optional) */}
                 <div>
-                  <label htmlFor="resiPengiriman" className="block text-sm font-medium text-gray-700">
-                    Shipping Receipt Number (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    name="resiPengiriman"
-                    id="resiPengiriman"
-                    value={progressForm.resiPengiriman}
-                    onChange={handleProgressFormChange}
-                    className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                    placeholder="Enter shipping receipt/tracking number"
-                  />
-                  <p className="mt-1 text-xs text-gray-500">
-                    If you&apos;ve shipped the completed pieces, enter the tracking number.
-                  </p>
+                  <label htmlFor="resiPengiriman" className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Shipping Receipt Number (Optional)</label>
+                  <input type="text" name="resiPengiriman" id="resiPengiriman" value={progressForm.resiPengiriman} onChange={handleProgressFormChange} className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-2 border-gray-300 rounded-lg bg-gray-50 text-gray-900 py-3 px-4 transition-all" placeholder="Enter shipping receipt/tracking number" />
+                  <p className="mt-1 text-xs text-gray-400">If you&apos;ve shipped the completed pieces, enter the tracking number.</p>
                 </div>
-
-                {/* Notes */}
                 <div>
-                  <label htmlFor="note" className="block text-sm font-medium text-gray-700">
-                    Notes
-                  </label>
-                  <textarea
-                    id="note"
-                    name="note"
-                    rows={3}
-                    value={progressForm.note}
-                    onChange={handleProgressFormChange}
-                    className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                    placeholder="Add any notes about this progress update"
-                  ></textarea>
+                  <label htmlFor="note" className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Notes</label>
+                  <textarea id="note" name="note" rows={3} value={progressForm.note} onChange={handleProgressFormChange} className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-2 border-gray-300 rounded-lg bg-gray-50 text-gray-900 py-3 px-4 transition-all" placeholder="Add any notes about this progress update"></textarea>
                 </div>
-
-                {/* Submit Button */}
-                <div>
-                  <button
-                    type="submit"
-                    disabled={progressForm.isSubmitting || progressForm.pcsFinished <= 0}
-                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {progressForm.isSubmitting ? 'Submitting...' : 'Submit Progress Report'}
-                  </button>
-                </div>
-              </form>
-
-              {/* Progress History */}
-              <div className="mt-10">
-                <h3 className="text-base font-medium text-gray-900 mb-4">Progress History</h3>
-                {Order.progressReports && Order.progressReports.length > 0 ? (
-                  <div className="flow-root">
-                    <ul className="-mb-8">
-                      {Order.progressReports.map((report, reportIdx) => (
-                        <li key={report.id}>
-                          <div className="relative pb-8">
-                            {reportIdx !== Order.progressReports.length - 1 ? (
-                              <span className="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
-                            ) : null}
-                            <div className="relative flex space-x-3">
-                              <div>
-                                <span className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center ring-8 ring-white">
-                                  <svg className="h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                  </svg>
-                                </span>
-                              </div>
-                              <div className="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
-                                <div>
-                                  <p className="text-sm text-gray-500">
-                                    Completed <span className="font-medium text-gray-900">{report.pcsFinished} pcs</span>
-                                    {report.note && <span> - {report.note}</span>}
-                                  </p>
-                                  {report.resiPengiriman && (
-                                    <p className="text-xs text-gray-500 mt-1">
-                                      Shipping receipt: <span className="font-medium">{report.resiPengiriman}</span>
-                                    </p>
-                                  )}
-                                </div>
-                                <div className="text-right text-sm whitespace-nowrap text-gray-500">
-                                  {formatDate(report.reportedAt || report.createdAt)}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
+                <button type="submit" disabled={progressForm.isSubmitting || progressForm.pcsFinished <= 0} className="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow font-semibold text-base text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+                  {progressForm.isSubmitting ? 'Submitting...' : 'Submit Progress Report'}
+                </button>
+                {progressForm.success && (
+                  <div className="bg-green-50 border border-green-200 rounded-md p-4 mt-2">
+                    <div className="flex items-center gap-2">
+                      <svg className="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                      <span className="text-sm font-medium text-green-800">{progressForm.success}</span>
+                    </div>
                   </div>
-                ) : (
-                  <p className="text-sm text-gray-500 text-center py-4">No progress reports yet.</p>
                 )}
-              </div>
+                {progressForm.error && (
+                  <div className="bg-red-50 border border-red-200 rounded-md p-4 mt-2">
+                    <div className="flex items-center gap-2">
+                      <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>
+                      <span className="text-sm font-medium text-red-800">{progressForm.error}</span>
+                    </div>
+                  </div>
+                )}
+              </form>
             </div>
-          </div>
-        )}
-      </main>
+          )}
 
-      {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 py-8">
+          {/* Progress History */}
+          {activeTab === 'progress' && (
+            <div className="bg-gradient-to-br from-white/90 via-white/95 to-white/90 backdrop-blur-xl rounded-2xl border border-gray-100 shadow p-6 mb-6">
+              <div className="mb-4 border-b border-gray-100 pb-2">
+                <h2 className="text-lg font-bold text-base-content mb-1">Progress History</h2>
+                <p className="text-sm text-base-content/60">View previous progress reports for this order.</p>
+              </div>
+              {Order.progressReports && Order.progressReports.length > 0 ? (
+                <ul>
+                  {Order.progressReports.map((report, reportIdx) => (
+                    <li key={report.id} className="flex items-start gap-4 py-4 border-b border-gray-100 last:border-b-0">
+                      <span className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                        <svg className="h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </span>
+                      <div className="flex-1">
+                        <div className="font-semibold text-base-content">Completed {report.pcsFinished} pcs</div>
+                        {report.note && <div className="text-sm text-base-content/70">{report.note}</div>}
+                        {report.resiPengiriman && (
+                          <div className="text-xs text-gray-500 mt-1 italic">Shipping receipt: <span className="font-medium">{report.resiPengiriman}</span></div>
+                        )}
+                      </div>
+                      <div className="text-xs text-gray-400 italic whitespace-nowrap mt-1">{formatDate(report.reportedAt || report.createdAt)}</div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8">
+                  <svg className="h-8 w-8 text-gray-300 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z" /></svg>
+                  <div className="text-sm text-gray-400 text-center">No progress reports yet.</div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </main>
+      <footer className="bg-white/80 border-t border-gray-100 py-8 mt-8 rounded-t-3xl shadow-inner">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="text-center text-gray-500 text-sm">
+          <p className="text-center text-gray-400 text-sm">
             &copy; {new Date().getFullYear()} WMS System. All rights reserved.
           </p>
         </div>

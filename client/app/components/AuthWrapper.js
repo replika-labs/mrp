@@ -14,10 +14,19 @@ export default function AuthWrapper({ children, requiredRole }) {
     const token = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
 
+    // Skip authentication check if already on login page
+    if (pathname === '/login') {
+      setLoading(false);
+      return;
+    }
+
     if (!token || !storedUser) {
       // Not authenticated, redirect to login
+      setLoading(false);
       router.push('/login');
-    } else {
+      return;
+    }
+
       setIsAuthenticated(true);
       try {
         const user = JSON.parse(storedUser);
@@ -44,7 +53,7 @@ export default function AuthWrapper({ children, requiredRole }) {
         localStorage.removeItem('user');
         router.push('/login');
       }
-    }
+    
     setLoading(false);
 
   }, [router, pathname, requiredRole]);

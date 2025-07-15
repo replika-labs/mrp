@@ -12,6 +12,8 @@ export default function CreateOrderManagement() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   const [tailors, setTailors] = useState([]);
   const [refreshingTailors, setRefreshingTailors] = useState(false);
 
@@ -81,8 +83,9 @@ export default function CreateOrderManagement() {
         const data = await response.json();
         if (data.success) {
           setTailors(data.contacts || []);
-          setSuccess('Tailors list refreshed successfully!');
-          setTimeout(() => setSuccess(''), 3000);
+          setSuccessMessage('Tailors list refreshed successfully!');
+          setShowSuccessModal(true);
+          setTimeout(() => setShowSuccessModal(false), 3000);
         } else {
           throw new Error(data.message || 'Failed to refresh tailors');
         }
@@ -160,13 +163,15 @@ export default function CreateOrderManagement() {
             ...alerts.map(alert => `Purchase alert created for ${alert.materialName}`)
           ].join('; ');
 
-          setSuccess(`Order created successfully! Stock notifications: ${stockMessage}`);
+          setSuccessMessage(`Order created successfully! Stock notifications: ${stockMessage}`);
         } else {
-          setSuccess('Order created successfully!');
+          setSuccessMessage('Order created successfully!');
         }
       } else {
-        setSuccess('Order created successfully!');
+        setSuccessMessage('Order created successfully!');
       }
+
+      setShowSuccessModal(true);
 
       // Reset form
       setFormData({
@@ -178,10 +183,11 @@ export default function CreateOrderManagement() {
         products: []
       });
 
-      // Redirect to orders management after 2 seconds
+      // Redirect to orders management after 3 seconds
       setTimeout(() => {
+        setShowSuccessModal(false);
         router.push('/dashboard/orders-management');
-      }, 2000);
+      }, 3000);
 
     } catch (err) {
       console.error('Error creating order:', err);
@@ -191,17 +197,44 @@ export default function CreateOrderManagement() {
     }
   };
 
+  // Handle escape key for modals
+  useEffect(() => {
+    const handleEscapeKey = (event) => {
+      if (event.key === 'Escape') {
+        setShowSuccessModal(false);
+      }
+    };
+
+    if (showSuccessModal) {
+      document.addEventListener('keydown', handleEscapeKey);
+      return () => document.removeEventListener('keydown', handleEscapeKey);
+    }
+  }, [showSuccessModal]);
+
+  // Handle click outside modal
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showSuccessModal && event.target.classList.contains('modal-backdrop')) {
+        setShowSuccessModal(false);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [showSuccessModal]);
+
   return (
     <AuthWrapper>
       <DashboardLayout>
-        <div className="max-w-6xl mx-auto p-6">
+        <div className="min-h-screen bg-gray-50 p-6">
+          <div className="max-w-6xl mx-auto">
           {/* Breadcrumb Navigation */}
           <nav className="flex mb-8" aria-label="Breadcrumb">
             <ol className="inline-flex items-center space-x-1 md:space-x-3">
               <li className="inline-flex items-center">
                 <button
                   onClick={() => router.push('/dashboard/orders-management')}
-                  className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+                    className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
                 >
                   Orders Management
                 </button>
@@ -219,15 +252,15 @@ export default function CreateOrderManagement() {
 
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Create New Order</h1>
-            <p className="mt-2 text-gray-600">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Create New Order</h1>
+              <p className="text-gray-600">
               Fill in the order details below. All fields marked with * are required.
             </p>
           </div>
 
-          {/* Alerts */}
+          {/* Error Messages */}
           {error && (
-            <div className="mb-6 bg-red-600 border border-red-700 rounded-lg p-4">
+              <div className="mb-6 bg-red-600 border border-gray-300 rounded-xl p-4">
               <div className="flex">
                 <svg className="w-5 h-5 text-white mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -237,30 +270,19 @@ export default function CreateOrderManagement() {
             </div>
           )}
 
-          {success && (
-            <div className="mb-6 bg-green-600 border border-green-700 rounded-lg p-4">
-              <div className="flex">
-                <svg className="w-5 h-5 text-white mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <p className="text-white">{success}</p>
-              </div>
-            </div>
-          )}
-
           {/* Form */}
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="px-6 py-5 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">Order Information</h2>
+            <div className="bg-gradient-to-br from-white/95 via-white/90 to-white/95 backdrop-blur-xl rounded-3xl border border-gray-300 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden">
+              <div className="px-8 py-6 border-b border-gray-300 bg-gradient-to-r from-gray-100/50 to-gray-50/50 backdrop-blur-sm">
+                <h2 className="text-xl font-bold text-gray-900">Order Information</h2>
             </div>
-            <div className="px-6 py-5">
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="px-8 py-8">
+                <form onSubmit={handleSubmit} className="space-y-8">
                 {/* Basic Information Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {/* Due Date */}
-                  <div>
-                    <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700 mb-1">
-                      Due Date *
+                    <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-gray-300 shadow-sm">
+                      <label htmlFor="dueDate" className="text-xs font-semibold text-gray-500 block mb-2 uppercase tracking-wider">
+                      Due Date <span className="text-red-600">*</span>
                     </label>
                     <input
                       type="date"
@@ -268,14 +290,14 @@ export default function CreateOrderManagement() {
                       name="dueDate"
                       value={formData.dueDate}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        className="w-full h-10 px-3 py-2 text-sm bg-white/80 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-200"
                       required
                     />
                   </div>
 
                   {/* Priority */}
-                  <div>
-                    <label htmlFor="priority" className="block text-sm font-medium text-gray-700 mb-1">
+                    <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-gray-300 shadow-sm">
+                      <label htmlFor="priority" className="text-xs font-semibold text-gray-500 block mb-2 uppercase tracking-wider">
                       Priority
                     </label>
                     <select
@@ -283,7 +305,7 @@ export default function CreateOrderManagement() {
                       name="priority"
                       value={formData.priority}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        className="w-full h-10 px-3 py-2 text-sm bg-white/80 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-200"
                     >
                       <option value="LOW">Low</option>
                       <option value="MEDIUM">Medium</option>
@@ -293,8 +315,8 @@ export default function CreateOrderManagement() {
                   </div>
 
                   {/* Tailor Assignment */}
-                  <div>
-                    <label htmlFor="workerContactId" className="block text-sm font-medium text-gray-700 mb-1">
+                    <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-gray-300 shadow-sm">
+                      <label htmlFor="workerContactId" className="text-xs font-semibold text-gray-500 block mb-2 uppercase tracking-wider">
                       Assigned Tailor
                     </label>
                     <div className="flex items-center space-x-2">
@@ -303,7 +325,7 @@ export default function CreateOrderManagement() {
                         name="workerContactId"
                         value={formData.workerContactId}
                         onChange={handleInputChange}
-                        className="flex-1 px-3 py-2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                          className="flex-1 h-10 px-3 py-2 text-sm bg-white/80 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-200"
                       >
                         <option value="">Select Tailor (Optional)</option>
                         {tailors.map(tailor => (
@@ -316,7 +338,7 @@ export default function CreateOrderManagement() {
                         type="button"
                         onClick={handleRefreshTailors}
                         disabled={refreshingTailors}
-                        className="px-2 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="px-2 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md"
                         title="Refresh tailors list"
                       >
                         {refreshingTailors ? (
@@ -331,29 +353,29 @@ export default function CreateOrderManagement() {
                         )}
                       </button>
                     </div>
-                    <p className="mt-1 text-xs text-gray-500">
+                      <p className="mt-2 text-xs text-gray-500">
                       Assign a tailor to this order for progress tracking
                     </p>
                   </div>
                 </div>
 
                 {/* Product Selection */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Products & Quantities *
+                  <div className="bg-white/60 backdrop-blur-sm rounded-xl p-6 border border-gray-300 shadow-sm">
+                    <label className="text-xs font-semibold text-gray-500 block mb-4 uppercase tracking-wider">
+                    Products & Quantities <span className="text-red-600">*</span>
                   </label>
                   <ProductSelector
                     selectedProducts={formData.products}
                     onProductChange={handleProductChange}
                   />
-                  <p className="mt-2 text-xs text-gray-500">
+                    <p className="mt-4 text-xs text-gray-500">
                     Select products and specify quantities. Material stock will be automatically checked.
                   </p>
                 </div>
 
                 {/* Description */}
-                <div>
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+                  <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-gray-300 shadow-sm">
+                    <label htmlFor="description" className="text-xs font-semibold text-gray-500 block mb-2 uppercase tracking-wider">
                     Description
                   </label>
                   <textarea
@@ -362,14 +384,14 @@ export default function CreateOrderManagement() {
                     rows={3}
                     value={formData.description}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      className="w-full px-4 py-3 text-sm bg-white/80 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-200 min-h-[100px]"
                     placeholder="Enter order description..."
                   />
                 </div>
 
                 {/* Customer Notes */}
-                <div>
-                  <label htmlFor="customerNote" className="block text-sm font-medium text-gray-700 mb-1">
+                  <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-gray-300 shadow-sm">
+                    <label htmlFor="customerNote" className="text-xs font-semibold text-gray-500 block mb-2 uppercase tracking-wider">
                     Customer Notes
                   </label>
                   <textarea
@@ -378,24 +400,24 @@ export default function CreateOrderManagement() {
                     rows={3}
                     value={formData.customerNote}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      className="w-full px-4 py-3 text-sm bg-white/80 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-200 min-h-[100px]"
                     placeholder="Enter customer notes..."
                   />
                 </div>
 
                 {/* Form Actions */}
-                <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+                  <div className="flex justify-end space-x-4 pt-8 border-t border-gray-300">
                   <button
                     type="button"
                     onClick={() => router.push('/dashboard/orders-management')}
-                    className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      className="px-6 py-3 border border-gray-300 rounded-xl shadow-lg text-sm font-medium text-gray-700 bg-white/80 backdrop-blur-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300 hover:scale-105"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={loading}
-                    className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                      className="px-6 py-3 border border-transparent rounded-xl shadow-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-all duration-300 hover:scale-105"
                   >
                     {loading ? 'Creating...' : 'Create Order'}
                   </button>
@@ -405,17 +427,55 @@ export default function CreateOrderManagement() {
           </div>
 
           {/* Help Section */}
-          <div className="mt-8 bg-blue-600 border border-blue-700 rounded-lg p-6">
-            <h3 className="text-lg font-medium text-white mb-2">Enhanced Features</h3>
-            <ul className="text-sm text-blue-100 space-y-1">
+            <div className="mt-8 bg-blue-600 border border-gray-300 rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300">
+              <h3 className="text-xl font-bold text-white mb-4">Enhanced Features</h3>
+              <ul className="text-sm text-blue-100 space-y-2">
               <li>• <strong>Tailor Assignment:</strong> Assign orders directly to tailors for better tracking</li>
               <li>• <strong>Material Stock Checking:</strong> Automatic material availability verification</li>
               <li>• <strong>Purchase Alerts:</strong> Automatic alerts when materials are low</li>
               <li>• <strong>Progress Tracking:</strong> Integrated progress reporting system</li>
               <li>• <strong>WhatsApp Integration:</strong> Direct communication with assigned tailors</li>
             </ul>
+            </div>
           </div>
         </div>
+
+        {/* Success Modal */}
+        {showSuccessModal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 modal-backdrop">
+            <div className="bg-gradient-to-br from-white/95 via-white/90 to-white/95 backdrop-blur-xl rounded-3xl border border-gray-300 shadow-2xl max-w-md w-full">
+              <div className="p-6">
+                <div className="flex items-center justify-center mb-6">
+                  <div className="bg-gradient-to-br from-green-100 to-green-200 p-3 rounded-full">
+                    <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                  </div>
+                </div>
+                
+                <h3 className="text-xl font-bold text-gray-900 text-center mb-4">
+                  Success!
+                </h3>
+                
+                <div className="mb-6">
+                  <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                    <p className="text-green-800 text-sm text-center">{successMessage}</p>
+                  </div>
+                </div>
+                
+                <div className="flex justify-center">
+                  <button
+                    type="button"
+                    className="px-6 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all duration-200 font-medium"
+                    onClick={() => setShowSuccessModal(false)}
+                  >
+                    OK
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </DashboardLayout>
     </AuthWrapper>
   );

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FiPlus, FiSearch, FiFilter, FiEye, FiEdit2, FiTrash2, FiDollarSign, FiPackage, FiCalendar, FiTrendingUp } from 'react-icons/fi';
+import { FiPlus, FiSearch, FiFilter, FiEye, FiEdit2, FiTrash2, FiDollarSign, FiPackage, FiCalendar, FiTrendingUp, FiX } from 'react-icons/fi';
 import DashboardLayout from '@/app/components/DashboardLayout';
 import AuthWrapper from '@/app/components/AuthWrapper';
 import { formatCurrencyShort } from '@/utils/formatNominal';
@@ -28,7 +28,15 @@ function PurchaseLogsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [showValidationModal, setShowValidationModal] = useState(false);
   const [selectedPurchaseLog, setSelectedPurchaseLog] = useState(null);
+  const [purchaseLogToDelete, setPurchaseLogToDelete] = useState(null);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [validationError, setValidationError] = useState('');
 
   // Form data
   const [formData, setFormData] = useState({
@@ -183,7 +191,8 @@ function PurchaseLogsPage() {
   // Load purchase log details for view/edit
   const loadPurchaseLogDetails = async (purchaseLogId) => {
     if (!purchaseLogId) {
-      alert('Purchase log ID not found');
+      setValidationError('Purchase log ID not found');
+      setShowValidationModal(true);
       return null;
     }
 
@@ -191,7 +200,8 @@ function PurchaseLogsPage() {
       const token = localStorage.getItem('token');
 
       if (!token) {
-        alert('Authentication required. Please login again.');
+        setValidationError('Authentication required. Please login again.');
+        setShowValidationModal(true);
         return null;
       }
 
@@ -222,7 +232,8 @@ function PurchaseLogsPage() {
     } catch (error) {
       console.error('Error loading purchase log details:', error);
       setError(error.message);
-      alert(`Error loading purchase log details: ${error.message}`);
+      setErrorMessage(`Error loading purchase log details: ${error.message}`);
+      setShowErrorModal(true);
       return null;
     }
   };
@@ -233,7 +244,8 @@ function PurchaseLogsPage() {
 
     // Basic validation
     if (!formData.purchaseDate || !formData.materialId || !formData.quantity || !formData.pricePerUnit || !formData.supplier) {
-      alert('Please fill in required fields: Purchase Date, Material, Quantity, Price per Unit, and Supplier');
+      setValidationError('Please fill in required fields: Purchase Date, Material, Quantity, Price per Unit, and Supplier');
+      setShowValidationModal(true);
       return;
     }
 
@@ -241,7 +253,8 @@ function PurchaseLogsPage() {
       const token = localStorage.getItem('token');
 
       if (!token) {
-        alert('Authentication required. Please login again.');
+        setValidationError('Authentication required. Please login again.');
+        setShowValidationModal(true);
         return;
       }
 
@@ -277,16 +290,23 @@ function PurchaseLogsPage() {
       const data = await response.json();
 
       if (data.success) {
-        alert('Purchase log created successfully!');
-        setShowCreateModal(false);
+        clearAllModals();
         resetForm();
+        setSuccessMessage('Purchase log created successfully!');
+        setShowSuccessModal(true);
         loadPurchaseLogs();
+        
+        // Auto-close success modal after 3 seconds
+        setTimeout(() => {
+          setShowSuccessModal(false);
+        }, 3000);
       } else {
         throw new Error(data.message || 'Failed to create purchase log');
       }
     } catch (error) {
       console.error('Error creating purchase log:', error);
-      alert(`Error: ${error.message}`);
+      setErrorMessage(error.message);
+      setShowErrorModal(true);
     }
   };
 
@@ -296,12 +316,14 @@ function PurchaseLogsPage() {
 
     // Basic validation
     if (!formData.purchaseDate || !formData.materialId || !formData.quantity || !formData.pricePerUnit || !formData.supplier) {
-      alert('Please fill in required fields: Purchase Date, Material, Quantity, Price per Unit, and Supplier');
+      setValidationError('Please fill in required fields: Purchase Date, Material, Quantity, Price per Unit, and Supplier');
+      setShowValidationModal(true);
       return;
     }
 
     if (!selectedPurchaseLog) {
-      alert('No purchase log selected for update');
+      setValidationError('No purchase log selected for update');
+      setShowValidationModal(true);
       return;
     }
 
@@ -309,7 +331,8 @@ function PurchaseLogsPage() {
       const token = localStorage.getItem('token');
 
       if (!token) {
-        alert('Authentication required. Please login again.');
+        setValidationError('Authentication required. Please login again.');
+        setShowValidationModal(true);
         return;
       }
 
@@ -347,24 +370,32 @@ function PurchaseLogsPage() {
       const data = await response.json();
 
       if (data.success) {
-        alert('Purchase log updated successfully!');
-        setShowEditModal(false);
+        clearAllModals();
         resetForm();
         setSelectedPurchaseLog(null);
+        setSuccessMessage('Purchase log updated successfully!');
+        setShowSuccessModal(true);
         loadPurchaseLogs();
+        
+        // Auto-close success modal after 3 seconds
+        setTimeout(() => {
+          setShowSuccessModal(false);
+        }, 3000);
       } else {
         throw new Error(data.message || 'Failed to update purchase log');
       }
     } catch (error) {
       console.error('Error updating purchase log:', error);
-      alert(`Error: ${error.message}`);
+      setErrorMessage(error.message);
+      setShowErrorModal(true);
     }
   };
 
   // Update purchase log status
   const handleUpdateStatus = async (purchaseLogId, newStatus) => {
     if (!purchaseLogId) {
-      alert('Purchase log ID not found');
+      setValidationError('Purchase log ID not found');
+      setShowValidationModal(true);
       return;
     }
 
@@ -372,7 +403,8 @@ function PurchaseLogsPage() {
       const token = localStorage.getItem('token');
 
       if (!token) {
-        alert('Authentication required. Please login again.');
+        setValidationError('Authentication required. Please login again.');
+        setShowValidationModal(true);
         return;
       }
 
@@ -401,37 +433,50 @@ function PurchaseLogsPage() {
       const data = await response.json();
 
       if (data.success) {
-        alert('Status updated successfully!');
+        setSuccessMessage('Status updated successfully!');
+        setShowSuccessModal(true);
         loadPurchaseLogs();
+        
+        // Auto-close success modal after 3 seconds
+        setTimeout(() => {
+          setShowSuccessModal(false);
+        }, 3000);
       } else {
         throw new Error(data.message || 'Failed to update status');
       }
     } catch (error) {
       console.error('Error updating status:', error);
-      alert(`Error: ${error.message}`);
+      setErrorMessage(error.message);
+      setShowErrorModal(true);
     }
   };
 
   // Delete purchase log
-  const handleDeletePurchaseLog = async (purchaseLogId) => {
+  const handleDeletePurchaseLog = (purchaseLogId) => {
     if (!purchaseLogId) {
-      alert('Purchase log ID not found');
+      setValidationError('Purchase log ID not found');
+      setShowValidationModal(true);
       return;
     }
 
-    if (!confirm('Are you sure you want to delete this purchase log? This action cannot be undone.')) {
-      return;
-    }
+    const purchaseLog = purchaseLogs.find(p => p.id === purchaseLogId);
+    setPurchaseLogToDelete(purchaseLog);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeletePurchaseLog = async () => {
+    if (!purchaseLogToDelete) return;
 
     try {
       const token = localStorage.getItem('token');
 
       if (!token) {
-        alert('Authentication required. Please login again.');
+        setValidationError('Authentication required. Please login again.');
+        setShowValidationModal(true);
         return;
       }
 
-      const response = await fetch(`http://localhost:8080/api/purchase-logs/${purchaseLogId}`, {
+      const response = await fetch(`http://localhost:8080/api/purchase-logs/${purchaseLogToDelete.id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -439,30 +484,52 @@ function PurchaseLogsPage() {
         }
       });
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error('Authentication required. Please login again.');
-        } else if (response.status === 404) {
-          throw new Error('Purchase log not found');
-        } else if (response.status === 400) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Cannot delete purchase log');
-        } else {
-          throw new Error(`Server error: ${response.status} ${response.statusText}`);
-        }
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        console.error('Failed to parse response JSON:', parseError);
+        data = {};
       }
 
-      const data = await response.json();
+      // Check for success based on multiple indicators
+      const isSuccess = (
+        (response.ok && data.success) ||
+        (data.success === true) ||
+        (data.message && data.message.toLowerCase().includes('deleted successfully')) ||
+        (response.status === 200 && data.message)
+      );
 
-      if (data.success) {
-        alert('Purchase log deleted successfully!');
+      if (isSuccess) {
+        clearAllModals();
+        const purchaseLogName = purchaseLogToDelete.material?.name || 'Purchase log';
+        setPurchaseLogToDelete(null);
+        setSuccessMessage(`${purchaseLogName} deleted successfully!`);
+        setShowSuccessModal(true);
         loadPurchaseLogs();
+        
+        // Auto-close success modal after 3 seconds
+        setTimeout(() => {
+          setShowSuccessModal(false);
+        }, 3000);
       } else {
-        throw new Error(data.message || 'Failed to delete purchase log');
+        clearAllModals();
+        if (response.status === 401) {
+          setErrorMessage('Authentication required. Please login again.');
+        } else if (response.status === 404) {
+          setErrorMessage('Purchase log not found');
+        } else if (response.status === 400 && data.message) {
+          setErrorMessage(data.message);
+        } else {
+          setErrorMessage(data.message || `Server error: ${response.status} ${response.statusText}`);
+        }
+        setShowErrorModal(true);
       }
     } catch (error) {
-      console.error('Error deleting purchase log:', error);
-      alert(`Error: ${error.message}`);
+      console.error('Network/Exception error deleting purchase log:', error);
+      clearAllModals();
+      setErrorMessage(`Network error: ${error.message}`);
+      setShowErrorModal(true);
     }
   };
 
@@ -501,6 +568,28 @@ function PurchaseLogsPage() {
       });
       setShowEditModal(true);
     }
+  };
+
+  // Clear all modal states to prevent conflicts
+  const clearAllModals = () => {
+    setShowCreateModal(false);
+    setShowEditModal(false);
+    setShowViewModal(false);
+    setShowDeleteModal(false);
+    setShowSuccessModal(false);
+    setShowErrorModal(false);
+    setShowValidationModal(false);
+  };
+
+  // Handle modal close
+  const handleCloseModal = () => {
+    clearAllModals();
+    setSelectedPurchaseLog(null);
+    setPurchaseLogToDelete(null);
+    setSuccessMessage('');
+    setErrorMessage('');
+    setValidationError('');
+    resetForm();
   };
 
   // Reset form
@@ -591,7 +680,7 @@ function PurchaseLogsPage() {
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
-          <div className="bg-white p-4 rounded-lg shadow">
+          <div className="bg-white p-4 rounded-lg shadow border border-gray-300 hover:scale-105 hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
             <div className="flex items-center">
               <FiPackage className="text-blue-600 text-2xl mr-3" />
               <div>
@@ -600,7 +689,7 @@ function PurchaseLogsPage() {
               </div>
             </div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow">
+          <div className="bg-white p-4 rounded-lg shadow border border-gray-300 hover:scale-105 hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
             <div className="flex items-center">
               <FiDollarSign className="text-green-600 text-2xl mr-3" />
               <div>
@@ -617,7 +706,7 @@ function PurchaseLogsPage() {
               </div>
             </div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow">
+          <div className="bg-white p-4 rounded-lg shadow border border-gray-300 hover:scale-105 hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
             <div className="flex items-center">
               <FiTrendingUp className="text-purple-600 text-2xl mr-3" />
               <div>
@@ -628,7 +717,7 @@ function PurchaseLogsPage() {
               </div>
             </div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow">
+          <div className="bg-white p-4 rounded-lg shadow border border-gray-300 hover:scale-105 hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
             <div className="flex items-center">
               <FiCalendar className="text-orange-600 text-2xl mr-3" />
               <div>
@@ -643,7 +732,7 @@ function PurchaseLogsPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-4 rounded-lg shadow mb-6">
+      <div className="bg-white p-4 rounded-lg shadow border border-gray-300 mb-6 hover:scale-101 hover:shadow-lg transition-all duration-300">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
@@ -716,7 +805,7 @@ function PurchaseLogsPage() {
       )}
 
       {/* Purchase Logs Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-lg shadow border border-gray-300 overflow-hidden hover:scale-101 hover:shadow-lg transition-all duration-300">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -868,37 +957,42 @@ function PurchaseLogsPage() {
 
       {/* Create Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-screen overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold">Add New Purchase</h2>
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-gradient-to-br from-white/95 via-white/90 to-white/95 backdrop-blur-xl rounded-3xl max-w-3xl w-full max-h-screen overflow-y-auto shadow-2xl border border-gray-300 hover:shadow-3xl transition-all duration-300">
+            <div className="p-8">
+              <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl">
+                    <FiPlus className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <h2 className="text-xl font-bold text-base-content">Add New Purchase</h2>
+                </div>
                 <button
                   onClick={() => setShowCreateModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-base-content/60 hover:text-base-content transition-colors p-2 rounded-xl hover:bg-gray-100/50 backdrop-blur-sm"
                 >
-                  ×
+                  <FiX className="h-5 w-5" />
                 </button>
               </div>
 
-              <form onSubmit={handleCreatePurchaseLog} className="space-y-4">
+              <form onSubmit={handleCreatePurchaseLog} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Purchase Date *
+                  <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-gray-300 shadow-sm">
+                    <label className="text-xs font-semibold text-base-content/70 block mb-2 uppercase tracking-wider">
+                      Purchase Date <span className="text-red-600">*</span>
                     </label>
                     <input
                       type="date"
                       value={formData.purchaseDate}
                       onChange={(e) => setFormData({ ...formData, purchaseDate: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full h-10 px-3 py-2 text-sm bg-white/80 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all duration-200"
                       required
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Material *
+                  <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-gray-300 shadow-sm">
+                    <label className="text-xs font-semibold text-base-content/70 block mb-2 uppercase tracking-wider">
+                      Material <span className="text-red-600">*</span>
                     </label>
                     <select
                       value={formData.materialId}
@@ -910,7 +1004,7 @@ function PurchaseLogsPage() {
                           unit: selectedMaterial?.unit || 'pcs'
                         });
                       }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full h-10 px-3 py-2 text-sm bg-white/80 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all duration-200"
                       required
                     >
                       <option value="">Select Material</option>
@@ -922,40 +1016,40 @@ function PurchaseLogsPage() {
                     </select>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Quantity *
+                  <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-gray-300 shadow-sm">
+                    <label className="text-xs font-semibold text-base-content/70 block mb-2 uppercase tracking-wider">
+                      Quantity <span className="text-red-600">*</span>
                     </label>
                     <input
                       type="number"
                       value={formData.quantity}
                       onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className="w-full h-10 px-3 py-2 text-sm bg-white/80 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       required
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Price per Unit *
+                  <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-gray-300 shadow-sm">
+                    <label className="text-xs font-semibold text-base-content/70 block mb-2 uppercase tracking-wider">
+                      Price per Unit <span className="text-red-600">*</span>
                     </label>
                     <input
                       type="number"
                       value={formData.pricePerUnit}
                       onChange={(e) => setFormData({ ...formData, pricePerUnit: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className="w-full h-10 px-3 py-2 text-sm bg-white/80 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       required
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Supplier *
+                  <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-gray-300 shadow-sm">
+                    <label className="text-xs font-semibold text-base-content/70 block mb-2 uppercase tracking-wider">
+                      Supplier <span className="text-red-600">*</span>
                     </label>
                     <select
                       value={formData.supplier}
                       onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full h-10 px-3 py-2 text-sm bg-white/80 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all duration-200"
                       required
                     >
                       <option value="">Select Supplier</option>
@@ -967,14 +1061,14 @@ function PurchaseLogsPage() {
                     </select>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-gray-300 shadow-sm">
+                    <label className="text-xs font-semibold text-base-content/70 block mb-2 uppercase tracking-wider">
                       Status
                     </label>
                     <select
                       value={formData.status}
                       onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full h-10 px-3 py-2 text-sm bg-white/80 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all duration-200"
                     >
                       <option value="PENDING">Pending</option>
                       <option value="RECEIVED">Received</option>
@@ -982,53 +1076,53 @@ function PurchaseLogsPage() {
                     </select>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-gray-300 shadow-sm">
+                    <label className="text-xs font-semibold text-base-content/70 block mb-2 uppercase tracking-wider">
                       Delivery Date
                     </label>
                     <input
                       type="date"
                       value={formData.deliveryDate}
                       onChange={(e) => setFormData({ ...formData, deliveryDate: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full h-10 px-3 py-2 text-sm bg-white/80 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all duration-200"
                     />
                   </div>
 
                   <div className="md:col-span-2">
-                    <div className="bg-blue-600 border border-blue-700 rounded-lg p-3">
-                      <p className="text-sm text-white">
+                    <div className="bg-blue-600 border border-blue-700 rounded-xl p-4 shadow-sm">
+                      <p className="text-sm text-white leading-relaxed">
                         <strong>Note:</strong> Invoice number will be automatically generated when the purchase is created.
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-gray-300 shadow-sm">
+                  <label className="text-xs font-semibold text-base-content/70 block mb-2 uppercase tracking-wider">
                     Notes
                   </label>
                   <textarea
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     rows="3"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-3 text-sm bg-white/80 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all duration-200 min-h-[100px]"
                   />
                 </div>
 
-                <div className="flex justify-end space-x-3 pt-4">
+                <div className="flex justify-end gap-4 pt-6 mt-6 border-t border-gray-300/50">
                   <button
                     type="button"
                     onClick={() => {
                       setShowCreateModal(false);
                       resetForm();
                     }}
-                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                    className="px-6 py-2 h-10 text-sm bg-white/80 border border-gray-300 text-base-content/70 hover:text-base-content rounded-xl hover:bg-gray-50 transition-all duration-200 font-medium"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                    className="px-6 py-2 h-10 text-sm bg-blue-600 text-white border border-blue-700 rounded-xl hover:bg-blue-700 hover:shadow-lg transition-all duration-300 hover:scale-[1.02] font-semibold"
                   >
                     Create Purchase
                   </button>
@@ -1041,37 +1135,42 @@ function PurchaseLogsPage() {
 
       {/* Edit Modal - Similar to Create Modal */}
       {showEditModal && selectedPurchaseLog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-screen overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold">Edit Purchase Log</h2>
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-gradient-to-br from-white/95 via-white/90 to-white/95 backdrop-blur-xl rounded-3xl max-w-3xl w-full max-h-screen overflow-y-auto shadow-2xl border border-gray-300 hover:shadow-3xl transition-all duration-300">
+            <div className="p-8">
+              <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl">
+                    <FiEdit2 className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <h2 className="text-xl font-bold text-base-content">Edit Purchase Log</h2>
+                </div>
                 <button
                   onClick={() => setShowEditModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-base-content/60 hover:text-base-content transition-colors p-2 rounded-xl hover:bg-gray-100/50 backdrop-blur-sm"
                 >
-                  ×
+                  <FiX className="h-5 w-5" />
                 </button>
               </div>
 
-              <form onSubmit={handleUpdatePurchaseLog} className="space-y-4">
+              <form onSubmit={handleUpdatePurchaseLog} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Purchase Date *
+                  <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-gray-300 shadow-sm">
+                    <label className="text-xs font-semibold text-base-content/70 block mb-2 uppercase tracking-wider">
+                      Purchase Date <span className="text-red-600">*</span>
                     </label>
                     <input
                       type="date"
                       value={formData.purchaseDate}
                       onChange={(e) => setFormData({ ...formData, purchaseDate: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full h-10 px-3 py-2 text-sm bg-white/80 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all duration-200"
                       required
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Material *
+                  <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-gray-300 shadow-sm">
+                    <label className="text-xs font-semibold text-base-content/70 block mb-2 uppercase tracking-wider">
+                      Material <span className="text-red-600">*</span>
                     </label>
                     <select
                       value={formData.materialId}
@@ -1083,7 +1182,7 @@ function PurchaseLogsPage() {
                           unit: selectedMaterial?.unit || 'pcs'
                         });
                       }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full h-10 px-3 py-2 text-sm bg-white/80 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all duration-200"
                       required
                     >
                       <option value="">Select Material</option>
@@ -1095,40 +1194,40 @@ function PurchaseLogsPage() {
                     </select>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Quantity *
+                  <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-gray-300 shadow-sm">
+                    <label className="text-xs font-semibold text-base-content/70 block mb-2 uppercase tracking-wider">
+                      Quantity <span className="text-red-600">*</span>
                     </label>
                     <input
                       type="number"
                       value={formData.quantity}
                       onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className="w-full h-10 px-3 py-2 text-sm bg-white/80 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       required
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Price per Unit *
+                  <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-gray-300 shadow-sm">
+                    <label className="text-xs font-semibold text-base-content/70 block mb-2 uppercase tracking-wider">
+                      Price per Unit <span className="text-red-600">*</span>
                     </label>
                     <input
                       type="number"
                       value={formData.pricePerUnit}
                       onChange={(e) => setFormData({ ...formData, pricePerUnit: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className="w-full h-10 px-3 py-2 text-sm bg-white/80 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       required
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Supplier *
+                  <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-gray-300 shadow-sm">
+                    <label className="text-xs font-semibold text-base-content/70 block mb-2 uppercase tracking-wider">
+                      Supplier <span className="text-red-600">*</span>
                     </label>
                     <select
                       value={formData.supplier}
                       onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full h-10 px-3 py-2 text-sm bg-white/80 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all duration-200"
                       required
                     >
                       <option value="">Select Supplier</option>
@@ -1140,14 +1239,14 @@ function PurchaseLogsPage() {
                     </select>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-gray-300 shadow-sm">
+                    <label className="text-xs font-semibold text-base-content/70 block mb-2 uppercase tracking-wider">
                       Status
                     </label>
                     <select
                       value={formData.status}
                       onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full h-10 px-3 py-2 text-sm bg-white/80 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all duration-200"
                     >
                       <option value="PENDING">Pending</option>
                       <option value="RECEIVED">Received</option>
@@ -1155,53 +1254,53 @@ function PurchaseLogsPage() {
                     </select>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-gray-300 shadow-sm">
+                    <label className="text-xs font-semibold text-base-content/70 block mb-2 uppercase tracking-wider">
                       Delivery Date
                     </label>
                     <input
                       type="date"
                       value={formData.deliveryDate}
                       onChange={(e) => setFormData({ ...formData, deliveryDate: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full h-10 px-3 py-2 text-sm bg-white/80 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all duration-200"
                     />
                   </div>
 
                   <div className="md:col-span-2">
-                    <div className="bg-blue-600 border border-blue-700 rounded-lg p-3">
-                      <p className="text-sm text-white">
+                    <div className="bg-blue-600 border border-blue-700 rounded-xl p-4 shadow-sm">
+                      <p className="text-sm text-white leading-relaxed">
                         <strong>Note:</strong> Invoice number was auto-generated when this purchase was created. You can update it if needed.
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-gray-300 shadow-sm">
+                  <label className="text-xs font-semibold text-base-content/70 block mb-2 uppercase tracking-wider">
                     Notes
                   </label>
                   <textarea
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     rows="3"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-3 text-sm bg-white/80 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all duration-200 min-h-[100px]"
                   />
                 </div>
 
-                <div className="flex justify-end space-x-3 pt-4">
+                <div className="flex justify-end gap-4 pt-6 mt-6 border-t border-gray-300/50">
                   <button
                     type="button"
                     onClick={() => {
                       setShowEditModal(false);
                       resetForm();
                     }}
-                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                    className="px-6 py-2 h-10 text-sm bg-white/80 border border-gray-300 text-base-content/70 hover:text-base-content rounded-xl hover:bg-gray-50 transition-all duration-200 font-medium"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                    className="px-6 py-2 h-10 text-sm bg-blue-600 text-white border border-blue-700 rounded-xl hover:bg-blue-700 hover:shadow-lg transition-all duration-300 hover:scale-[1.02] font-semibold"
                   >
                     Update Purchase
                   </button>
@@ -1214,45 +1313,53 @@ function PurchaseLogsPage() {
 
       {/* View Modal */}
       {showViewModal && selectedPurchaseLog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-3xl w-full max-h-screen overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold">Purchase Log Details</h2>
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-gradient-to-br from-white/95 via-white/90 to-white/95 backdrop-blur-xl rounded-3xl max-w-4xl w-full max-h-screen overflow-y-auto shadow-2xl border border-gray-300 hover:shadow-3xl transition-all duration-300">
+            <div className="p-8">
+              <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl">
+                    <FiPackage className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-base-content">Purchase Log Details</h2>
+                </div>
                 <button
                   onClick={() => setShowViewModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-base-content/60 hover:text-base-content transition-colors p-2 rounded-xl hover:bg-gray-100/50 backdrop-blur-sm"
                 >
-                  ×
+                  <FiX className="h-6 w-6" />
                 </button>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Purchase Information */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold border-b pb-2">Purchase Information</h3>
+                <div className="bg-white/40 backdrop-blur-sm rounded-xl p-6 border border-gray-300 shadow-sm">
+                  <h3 className="text-lg font-bold text-base-content mb-4 uppercase tracking-wider flex items-center gap-2">
+                    <FiCalendar className="w-5 h-5" />
+                    Purchase Information
+                  </h3>
 
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Purchase Date</label>
-                      <p className="text-gray-900">{new Date(selectedPurchaseLog.purchaseDate).toLocaleDateString()}</p>
+                  <div className="space-y-4">
+                    <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-gray-200">
+                      <label className="text-xs font-semibold text-base-content/70 block mb-1 uppercase tracking-wider">Purchase Date</label>
+                      <p className="text-base-content font-semibold">{new Date(selectedPurchaseLog.purchaseDate).toLocaleDateString()}</p>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Material</label>
-                      <p className="text-gray-900">{selectedPurchaseLog.material?.name || 'Unknown'}</p>
-                      <p className="text-sm text-gray-500">Code: {selectedPurchaseLog.material?.code || 'N/A'}</p>
+                    <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-gray-200">
+                      <label className="text-xs font-semibold text-base-content/70 block mb-1 uppercase tracking-wider">Material</label>
+                      <p className="text-base-content font-semibold">{selectedPurchaseLog.material?.name || 'Unknown'}</p>
+                      <p className="text-sm text-base-content/60 mt-1">Code: {selectedPurchaseLog.material?.code || 'N/A'}</p>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Quantity</label>
-                      <p className="text-gray-900 font-semibold">{selectedPurchaseLog.quantity} {selectedPurchaseLog.unit}</p>
+                    <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-gray-200">
+                      <label className="text-xs font-semibold text-base-content/70 block mb-1 uppercase tracking-wider">Quantity</label>
+                      <p className="text-base-content font-bold text-lg">{selectedPurchaseLog.quantity} {selectedPurchaseLog.unit}</p>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Price per Unit</label>
-                      <p className="text-gray-900">{formatCurrencyShort(selectedPurchaseLog.pricePerUnit || 0)}</p>
+                    <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-gray-200">
+                      <label className="text-xs font-semibold text-base-content/70 block mb-1 uppercase tracking-wider">Price per Unit</label>
+                      <p className="text-base-content font-semibold">{formatCurrencyShort(selectedPurchaseLog.pricePerUnit || 0)}</p>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Total Amount</label>
-                      <p className="text-gray-900 font-bold text-green-600">
+                    <div className="bg-green-50 backdrop-blur-sm rounded-lg p-4 border border-green-200 shadow-sm">
+                      <label className="text-xs font-semibold text-green-700 block mb-1 uppercase tracking-wider">Total Amount</label>
+                      <p className="text-green-700 font-bold text-xl">
                         {formatCurrencyShort(selectedPurchaseLog.totalCost || 0)}
                       </p>
                     </div>
@@ -1260,25 +1367,28 @@ function PurchaseLogsPage() {
                 </div>
 
                 {/* Supplier & Status Information */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold border-b pb-2">Supplier & Status</h3>
+                <div className="bg-white/40 backdrop-blur-sm rounded-xl p-6 border border-gray-300 shadow-sm">
+                  <h3 className="text-lg font-bold text-base-content mb-4 uppercase tracking-wider flex items-center gap-2">
+                    <FiDollarSign className="w-5 h-5" />
+                    Supplier & Status
+                  </h3>
 
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Supplier</label>
-                      <p className="text-gray-900">{selectedPurchaseLog.supplier || 'No supplier specified'}</p>
+                  <div className="space-y-4">
+                    <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-gray-200">
+                      <label className="text-xs font-semibold text-base-content/70 block mb-1 uppercase tracking-wider">Supplier</label>
+                      <p className="text-base-content font-semibold">{selectedPurchaseLog.supplier || 'No supplier specified'}</p>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Status</label>
+                    <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-gray-200">
+                      <label className="text-xs font-semibold text-base-content/70 block mb-2 uppercase tracking-wider">Status</label>
                       {getStatusBadge(selectedPurchaseLog.status)}
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Invoice Number</label>
-                      <p className="text-gray-900">{selectedPurchaseLog.invoiceNumber || 'Auto-generated'}</p>
+                    <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-gray-200">
+                      <label className="text-xs font-semibold text-base-content/70 block mb-1 uppercase tracking-wider">Invoice Number</label>
+                      <p className="text-base-content font-semibold">{selectedPurchaseLog.invoiceNumber || 'Auto-generated'}</p>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Delivery Date</label>
-                      <p className="text-gray-900">
+                    <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-gray-200">
+                      <label className="text-xs font-semibold text-base-content/70 block mb-1 uppercase tracking-wider">Delivery Date</label>
+                      <p className="text-base-content font-semibold">
                         {selectedPurchaseLog.deliveryDate
                           ? new Date(selectedPurchaseLog.deliveryDate).toLocaleDateString()
                           : 'Not specified'
@@ -1286,9 +1396,9 @@ function PurchaseLogsPage() {
                       </p>
                     </div>
                     {selectedPurchaseLog.receivedQuantity && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Received Quantity</label>
-                        <p className="text-gray-900">{selectedPurchaseLog.receivedQuantity} {selectedPurchaseLog.unit}</p>
+                      <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-gray-200">
+                        <label className="text-xs font-semibold text-base-content/70 block mb-1 uppercase tracking-wider">Received Quantity</label>
+                        <p className="text-base-content font-semibold">{selectedPurchaseLog.receivedQuantity} {selectedPurchaseLog.unit}</p>
                       </div>
                     )}
                   </div>
@@ -1298,34 +1408,208 @@ function PurchaseLogsPage() {
               {/* Notes */}
               {selectedPurchaseLog.notes && (
                 <div className="mt-6">
-                  <h3 className="text-lg font-semibold border-b pb-2 mb-4">Notes</h3>
-                  <p className="text-gray-900 bg-gray-50 p-3 rounded-lg">
-                    {selectedPurchaseLog.notes}
-                  </p>
+                  <div className="bg-white/40 backdrop-blur-sm rounded-xl p-6 border border-gray-300 shadow-sm">
+                    <h3 className="text-lg font-bold text-base-content mb-4 uppercase tracking-wider flex items-center gap-2">
+                      <FiEdit2 className="w-5 h-5" />
+                      Notes
+                    </h3>
+                    <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4 border border-gray-200">
+                      <p className="text-base-content leading-relaxed whitespace-pre-line">
+                        {selectedPurchaseLog.notes}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               )}
 
               {/* Timeline */}
               <div className="mt-6">
-                <h3 className="text-lg font-semibold border-b pb-2 mb-4">Timeline</h3>
-                <div className="space-y-2">
-                  <div className="flex items-center text-sm">
-                    <div className="w-24 text-gray-500">Created:</div>
-                    <div className="text-gray-900">{new Date(selectedPurchaseLog.createdAt).toLocaleString()}</div>
-                  </div>
-                  <div className="flex items-center text-sm">
-                    <div className="w-24 text-gray-500">Updated:</div>
-                    <div className="text-gray-900">{new Date(selectedPurchaseLog.updatedAt).toLocaleString()}</div>
+                <div className="bg-white/40 backdrop-blur-sm rounded-xl p-6 border border-gray-300 shadow-sm">
+                  <h3 className="text-lg font-bold text-base-content mb-4 uppercase tracking-wider flex items-center gap-2">
+                    <FiTrendingUp className="w-5 h-5" />
+                    Timeline
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-gray-200">
+                      <label className="text-xs font-semibold text-base-content/70 block mb-1 uppercase tracking-wider">Created</label>
+                      <p className="text-base-content font-semibold">{new Date(selectedPurchaseLog.createdAt).toLocaleString()}</p>
+                    </div>
+                    <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-gray-200">
+                      <label className="text-xs font-semibold text-base-content/70 block mb-1 uppercase tracking-wider">Updated</label>
+                      <p className="text-base-content font-semibold">{new Date(selectedPurchaseLog.updatedAt).toLocaleString()}</p>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="flex justify-end mt-6">
+              <div className="flex justify-end mt-8">
                 <button
                   onClick={() => setShowViewModal(false)}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+                  className="px-6 py-2 h-10 text-sm bg-gray-600 text-white border border-gray-300 rounded-xl hover:bg-gray-700 hover:shadow-lg transition-all duration-300 hover:scale-[1.02] font-semibold"
                 >
                   Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && purchaseLogToDelete && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gradient-to-br from-white/95 via-white/90 to-white/95 backdrop-blur-xl rounded-3xl border border-gray-300 shadow-2xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center justify-center mb-6">
+                <div className="bg-gradient-to-br from-red-100 to-red-200 p-3 rounded-full">
+                  <FiTrash2 className="w-8 h-8 text-red-600" />
+                </div>
+              </div>
+              
+              <h3 className="text-xl font-bold text-gray-900 text-center mb-4">
+                Delete Purchase Log
+              </h3>
+              
+              <div className="mb-6">
+                <p className="text-gray-600 text-center mb-4">
+                  Are you sure you want to delete this purchase log? This action cannot be undone.
+                </p>
+                
+                <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                    <span className="font-semibold text-red-800">{purchaseLogToDelete.material?.name || 'Purchase Log'}</span>
+                  </div>
+                  <p className="text-sm text-red-700 ml-6">
+                    Quantity: {purchaseLogToDelete.quantity} {purchaseLogToDelete.unit}
+                  </p>
+                  <p className="text-sm text-red-700 ml-6">
+                    Supplier: {purchaseLogToDelete.supplier}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  className="flex-1 px-4 py-2 bg-white/80 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all duration-200 font-medium"
+                  onClick={() => setShowDeleteModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all duration-200 font-medium"
+                  onClick={confirmDeletePurchaseLog}
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gradient-to-br from-white/95 via-white/90 to-white/95 backdrop-blur-xl rounded-3xl border border-gray-300 shadow-2xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center justify-center mb-6">
+                <div className="bg-gradient-to-br from-green-100 to-green-200 p-3 rounded-full">
+                  <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                </div>
+              </div>
+              
+              <h3 className="text-xl font-bold text-gray-900 text-center mb-4">
+                Success!
+              </h3>
+              
+              <div className="mb-6">
+                <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                  <p className="text-green-800 text-sm text-center">{successMessage}</p>
+                </div>
+              </div>
+              
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  className="px-6 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all duration-200 font-medium"
+                  onClick={() => setShowSuccessModal(false)}
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Error Modal */}
+      {showErrorModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gradient-to-br from-white/95 via-white/90 to-white/95 backdrop-blur-xl rounded-3xl border border-gray-300 shadow-2xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center justify-center mb-6">
+                <div className="bg-gradient-to-br from-red-100 to-red-200 p-3 rounded-full">
+                  <FiX className="w-8 h-8 text-red-600" />
+                </div>
+              </div>
+              
+              <h3 className="text-xl font-bold text-gray-900 text-center mb-4">
+                Error
+              </h3>
+              
+              <div className="mb-6">
+                <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                  <p className="text-red-800 text-sm text-center">{errorMessage}</p>
+                </div>
+              </div>
+              
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  className="px-6 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all duration-200 font-medium"
+                  onClick={() => setShowErrorModal(false)}
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Validation Error Modal */}
+      {showValidationModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gradient-to-br from-white/95 via-white/90 to-white/95 backdrop-blur-xl rounded-3xl border border-gray-300 shadow-2xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center justify-center mb-6">
+                <div className="bg-gradient-to-br from-orange-100 to-orange-200 p-3 rounded-full">
+                  <FiTrash2 className="w-8 h-8 text-orange-600" />
+                </div>
+              </div>
+              
+              <h3 className="text-xl font-bold text-gray-900 text-center mb-4">
+                Validation Error
+              </h3>
+              
+              <div className="mb-6">
+                <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+                  <p className="text-orange-800 text-sm text-center">{validationError}</p>
+                </div>
+              </div>
+              
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  className="px-6 py-2 bg-orange-600 text-white rounded-xl hover:bg-orange-700 transition-all duration-200 font-medium"
+                  onClick={() => setShowValidationModal(false)}
+                >
+                  OK
                 </button>
               </div>
             </div>

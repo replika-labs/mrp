@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AuthWrapper from '../../../components/AuthWrapper';
-import DashboardLayout from '../../../components/DashboardLayout.js.bak';
+import DashboardLayout from '../../../components/DashboardLayout.js';
 import Link from 'next/link';
 
 export default function ProductAnalyticsPage() {

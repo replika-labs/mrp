@@ -812,7 +812,7 @@ export default function TailorProgressForm({ params }) {
             {/* Tailor Name Field */}
             <div>
               <label htmlFor="workerName" className="block text-sm font-medium text-gray-300 mb-1">
-                Tailor Name *
+                Tailor Name <span className="text-red-600">*</span>
                 {workerAssignmentSource === 'order' && (
                   <span className="ml-2 text-xs text-blue-400 font-normal">(Assigned to Order)</span>
                 )}

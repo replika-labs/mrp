@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AuthWrapper from '../../../components/AuthWrapper';
-import DashboardLayout from '../../../components/DashboardLayout.js.bak';
+import DashboardLayout from '../../../components/DashboardLayout.js';
 import Link from 'next/link';
 import Image from 'next/image';
+import { FiCamera } from 'react-icons/fi';
 
 export default function CreateProductPage() {
   const [user, setUser] = useState(null);
@@ -15,6 +16,8 @@ export default function CreateProductPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   const router = useRouter();
 
   // Form state
@@ -259,8 +262,6 @@ export default function CreateProductPage() {
         console.log(key, value);
       }
 
-
-
       // Add photos
       photos.forEach((photo, index) => {
         submitData.append('photos', photo.file);
@@ -283,13 +284,14 @@ export default function CreateProductPage() {
       }
 
       const result = await response.json();
-      setSuccess('Product created successfully');
-      setTimeout(() => setSuccess(''), 3000);
+      setSuccessMessage('Product created successfully!');
+      setShowSuccessModal(true);
 
-      // Redirect to products list after a short delay
+      // Auto-close success modal after 3 seconds
       setTimeout(() => {
+        setShowSuccessModal(false);
         router.push('/dashboard/products');
-      }, 2000);
+      }, 3000);
 
     } catch (error) {
       console.error('Error creating product:', error);
@@ -299,6 +301,32 @@ export default function CreateProductPage() {
       setLoading(false);
     }
   };
+
+  // Handle escape key for modals
+  useEffect(() => {
+    const handleEscapeKey = (event) => {
+      if (event.key === 'Escape') {
+        setShowSuccessModal(false);
+      }
+    };
+
+    if (showSuccessModal) {
+      document.addEventListener('keydown', handleEscapeKey);
+      return () => document.removeEventListener('keydown', handleEscapeKey);
+    }
+  }, [showSuccessModal]);
+
+  // Handle click outside modal
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showSuccessModal && event.target.classList.contains('modal-backdrop')) {
+        setShowSuccessModal(false);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [showSuccessModal]);
 
   if (!user) return null;
 
@@ -320,28 +348,22 @@ export default function CreateProductPage() {
             </Link>
           </div>
 
-          {/* Success/Error Messages */}
-          {success && (
-            <div className="bg-green-600 border border-green-700 text-white px-4 py-3 rounded-lg">
-              {success}
-            </div>
-          )}
-
+          {/* Error Messages */}
           {error && (
-            <div className="bg-red-600 border border-red-700 text-white px-4 py-3 rounded-lg">
+            <div className="bg-red-600 border border-gray-300 text-white px-4 py-3 rounded-lg">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Information */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-300 p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Product Name *
+                    Product Name <span className="text-red-600">*</span>
                   </label>
                   <input
                     type="text"
@@ -357,7 +379,7 @@ export default function CreateProductPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Category *
+                    Category <span className="text-red-600">*</span>
                   </label>
                   <select
                     name="category"
@@ -404,7 +426,7 @@ export default function CreateProductPage() {
             </div>
 
             {/* Pricing and Inventory */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-300 p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Pricing & Inventory</h2>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -428,7 +450,7 @@ export default function CreateProductPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Current Stock *
+                    Current Stock <span className="text-red-600">*</span>
                   </label>
                   <input
                     type="number"
@@ -462,7 +484,7 @@ export default function CreateProductPage() {
             </div>
 
             {/* Additional Details */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-300 p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Additional Details</h2>
 
               <div className="space-y-4">
@@ -499,7 +521,7 @@ export default function CreateProductPage() {
             </div>
 
             {/* Colors and Variations */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-300 p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Color & Variation</h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -551,7 +573,7 @@ export default function CreateProductPage() {
             </div>
 
             {/* Photo Upload */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-300 p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Product Photos</h2>
 
               {/* Drag and Drop Area */}
@@ -563,7 +585,9 @@ export default function CreateProductPage() {
                 onDragOver={handleDrag}
                 onDrop={handleDrop}
               >
-                <div className="text-4xl mb-4">📷</div>
+                <div className="mb-4">
+                  <FiCamera className="w-12 h-12 text-gray-400 mx-auto" />
+                </div>
                 <p className="text-lg font-medium text-gray-700 mb-2">
                   Drag and drop photos here, or
                 </p>
@@ -653,6 +677,43 @@ export default function CreateProductPage() {
             </div>
           </form>
         </div>
+
+        {/* Success Modal */}
+        {showSuccessModal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 modal-backdrop">
+            <div className="bg-gradient-to-br from-white/95 via-white/90 to-white/95 backdrop-blur-xl rounded-3xl border border-gray-300 shadow-2xl max-w-md w-full">
+              <div className="p-6">
+                <div className="flex items-center justify-center mb-6">
+                  <div className="bg-gradient-to-br from-green-100 to-green-200 p-3 rounded-full">
+                    <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                  </div>
+                </div>
+                
+                <h3 className="text-xl font-bold text-gray-900 text-center mb-4">
+                  Success!
+                </h3>
+                
+                <div className="mb-6">
+                  <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                    <p className="text-green-800 text-sm text-center">{successMessage}</p>
+                  </div>
+                </div>
+                
+                <div className="flex justify-center">
+                  <button
+                    type="button"
+                    className="px-6 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all duration-200 font-medium"
+                    onClick={() => setShowSuccessModal(false)}
+                  >
+                    OK
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </DashboardLayout>
     </AuthWrapper>
   );

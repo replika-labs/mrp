@@ -187,7 +187,7 @@ export default function CreateOrder() {
             {/* Due Date */}
             <div>
               <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700">
-                Due Date *
+                Due Date <span className="text-red-600">*</span>
               </label>
               <input
                 type="date"

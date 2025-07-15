@@ -26,7 +26,15 @@ function MaterialsManagementPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showValidationModal, setShowValidationModal] = useState(false);
   const [selectedMaterial, setSelectedMaterial] = useState(null);
+  const [deleteError, setDeleteError] = useState('');
+  const [validationError, setValidationError] = useState('');
+  const [materialToDelete, setMaterialToDelete] = useState(null);
+  const [successMessage, setSuccessMessage] = useState('');
 
   // Form data
   const [formData, setFormData] = useState({
@@ -157,7 +165,8 @@ function MaterialsManagementPage() {
 
     if (!materialId) {
       console.error('Material ID is missing or invalid:', materialId);
-      alert('Material ID not found');
+      setValidationError('Material ID not found');
+      setShowValidationModal(true);
       return null;
     }
 
@@ -166,7 +175,8 @@ function MaterialsManagementPage() {
 
       if (!token) {
         console.error('No authentication token found');
-        alert('Authentication required. Please login again.');
+        setValidationError('Authentication required. Please login again.');
+        setShowValidationModal(true);
         return null;
       }
 
@@ -211,13 +221,16 @@ function MaterialsManagementPage() {
       // More specific error handling
       if (error.name === 'TypeError' && error.message.includes('fetch')) {
         setError('Network error: Unable to connect to server. Please check if the backend is running.');
-        alert('Network error: Unable to connect to server. Please check if the backend is running.');
+        setValidationError('Network error: Unable to connect to server. Please check if the backend is running.');
+        setShowValidationModal(true);
       } else if (error.message.includes('SyntaxError') || error.message.includes('JSON')) {
         setError('Server response error: Invalid JSON response from server.');
-        alert('Server response error: Invalid JSON response from server.');
+        setValidationError('Server response error: Invalid JSON response from server.');
+        setShowValidationModal(true);
       } else {
         setError(error.message);
-        alert(`Error loading material details: ${error.message}`);
+        setValidationError(`Error loading material details: ${error.message}`);
+        setShowValidationModal(true);
       }
 
       return null;
@@ -280,29 +293,18 @@ function MaterialsManagementPage() {
       // Success handling
       handleCloseModal();
       loadMaterials();
-      // Show success message
-      const successMessage = document.createElement('div');
-      successMessage.className = 'toast toast-end';
-      successMessage.innerHTML = `
-        <div class="alert alert-success">
-          <span>Material created successfully!</span>
-        </div>
-      `;
-      document.body.appendChild(successMessage);
-      setTimeout(() => successMessage.remove(), 3000);
+      setSuccessMessage('Material created successfully!');
+      setShowSuccessModal(true);
+      
+      // Auto-close success modal after 3 seconds
+      setTimeout(() => {
+        setShowSuccessModal(false);
+      }, 3000);
 
     } catch (error) {
       console.error('Error creating material:', error);
-      // Show error message
-      const errorMessage = document.createElement('div');
-      errorMessage.className = 'toast toast-end';
-      errorMessage.innerHTML = `
-        <div class="alert alert-error">
-          <span>${error.message}</span>
-        </div>
-      `;
-      document.body.appendChild(errorMessage);
-      setTimeout(() => errorMessage.remove(), 3000);
+      setValidationError(error.message);
+      setShowValidationModal(true);
     }
   };
 
@@ -312,12 +314,14 @@ function MaterialsManagementPage() {
 
     // Basic validation
     if (!formData.name) {
-      alert('Please fill in required fields: Name');
+      setValidationError('Please fill in required fields: Name');
+      setShowValidationModal(true);
       return;
     }
 
     if (!selectedMaterial) {
-      alert('No material selected for update');
+      setValidationError('No material selected for update');
+      setShowValidationModal(true);
       return;
     }
 
@@ -325,14 +329,16 @@ function MaterialsManagementPage() {
       const token = localStorage.getItem('token');
 
       if (!token) {
-        alert('Authentication required. Please login again.');
+        setValidationError('Authentication required. Please login again.');
+        setShowValidationModal(true);
         return;
       }
 
       const materialId = selectedMaterial.id || selectedMaterial.material?.id;
 
       if (!materialId) {
-        alert('Material ID not found');
+        setValidationError('Material ID not found');
+        setShowValidationModal(true);
         return;
       }
 
@@ -361,40 +367,53 @@ function MaterialsManagementPage() {
       const data = await response.json();
 
       if (data.success) {
-        alert('Material updated successfully!');
+        setSuccessMessage('Material updated successfully!');
+        setShowSuccessModal(true);
         setShowEditModal(false);
         resetForm();
         setSelectedMaterial(null);
         loadMaterials();
+        
+        // Auto-close success modal after 3 seconds
+        setTimeout(() => {
+          setShowSuccessModal(false);
+        }, 3000);
       } else {
         throw new Error(data.message || 'Failed to update material');
       }
     } catch (error) {
       console.error('Error updating material:', error);
-      alert(`Error: ${error.message}`);
+      setValidationError(error.message);
+      setShowValidationModal(true);
     }
   };
 
   // Delete material
-  const handleDeleteMaterial = async (materialId) => {
+  const handleDeleteMaterial = (materialId) => {
     if (!materialId) {
-      alert('Material ID not found');
+      setDeleteError('Material ID not found');
+      setShowErrorModal(true);
       return;
     }
 
-    if (!confirm('Are you sure you want to delete this material? This action cannot be undone.')) {
-      return;
-    }
+    const material = materials.find(m => m.id === materialId);
+    setMaterialToDelete(material);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteMaterial = async () => {
+    if (!materialToDelete) return;
 
     try {
       const token = localStorage.getItem('token');
 
       if (!token) {
-        alert('Authentication required. Please login again.');
+        setDeleteError('Authentication required. Please login again.');
+        setShowErrorModal(true);
         return;
       }
 
-      const response = await fetch(`http://localhost:8080/api/materials-management/${materialId}`, {
+      const response = await fetch(`http://localhost:8080/api/materials-management/${materialToDelete.id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -402,30 +421,67 @@ function MaterialsManagementPage() {
         }
       });
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error('Authentication required. Please login again.');
-        } else if (response.status === 404) {
-          throw new Error('Material not found');
-        } else if (response.status === 400) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Cannot delete material');
-        } else {
-          throw new Error(`Server error: ${response.status} ${response.statusText}`);
-        }
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        console.error('Failed to parse response JSON:', parseError);
+        data = {};
       }
 
-      const data = await response.json();
+      // Check for success based on multiple indicators
+      // This handles cases where server returns error status but operation actually succeeded
+      const isSuccess = (
+        (response.ok && data.success) ||
+        (data.success === true) ||
+        (data.message && data.message.toLowerCase().includes('deleted successfully')) ||
+        (data.message && data.message.toLowerCase().includes('material deleted successfully')) ||
+        (response.status === 200 && data.message)
+      );
 
-      if (data.success) {
-        alert('Material deleted successfully!');
+      if (isSuccess) {
+        // Clear all modals first to prevent conflicts
+        clearAllModals();
+        
+        // Clear all error states
+        setDeleteError('');
+        setValidationError('');
+        setError('');
+        
+        // Set success state
+        const materialName = materialToDelete.name;
+        setMaterialToDelete(null);
+        setSuccessMessage(`Material "${materialName}" has been successfully deleted.`);
+        setShowSuccessModal(true);
         loadMaterials();
+        
+        // Auto-close success modal after 3 seconds
+        setTimeout(() => {
+          setShowSuccessModal(false);
+        }, 3000);
       } else {
-        throw new Error(data.message || 'Failed to delete material');
+        // Clear all modals first to prevent conflicts
+        clearAllModals();
+        
+        // Handle different error cases
+        if (response.status === 401) {
+          setDeleteError('Authentication required. Please login again.');
+        } else if (response.status === 404) {
+          setDeleteError('Material not found');
+        } else if (response.status === 400 && data.message) {
+          setDeleteError(data.message);
+        } else {
+          setDeleteError(data.message || `Server error: ${response.status} ${response.statusText}`);
+        }
+        setShowErrorModal(true);
       }
     } catch (error) {
-      console.error('Error deleting material:', error);
-      alert(`Error: ${error.message}`);
+      console.error('Network/Exception error deleting material:', error);
+      // Clear all modals first to prevent conflicts
+      clearAllModals();
+      
+      setDeleteError(`Network error: ${error.message}`);
+      setShowErrorModal(true);
     }
   };
 
@@ -444,7 +500,8 @@ function MaterialsManagementPage() {
         setShowViewModal(true);
       } else {
         console.error('Material not found in local data either');
-        alert('Material not found. Please refresh the page and try again.');
+        setValidationError('Material not found. Please refresh the page and try again.');
+        setShowValidationModal(true);
       }
     }
   };
@@ -490,7 +547,8 @@ function MaterialsManagementPage() {
         setShowEditModal(true);
       } else {
         console.error('Material not found in local data either');
-        alert('Material not found. Please refresh the page and try again.');
+        setValidationError('Material not found. Please refresh the page and try again.');
+        setShowValidationModal(true);
       }
     }
   };
@@ -588,12 +646,25 @@ function MaterialsManagementPage() {
     loadMaterials();
   }, [currentPage, filters]);
 
-  // Handle modal close
-  const handleCloseModal = () => {
+  // Clear all modal states to prevent conflicts
+  const clearAllModals = () => {
     setShowCreateModal(false);
     setShowEditModal(false);
     setShowViewModal(false);
+    setShowDeleteModal(false);
+    setShowErrorModal(false);
+    setShowSuccessModal(false);
+    setShowValidationModal(false);
+  };
+
+  // Handle modal close
+  const handleCloseModal = () => {
+    clearAllModals();
     setSelectedMaterial(null);
+    setMaterialToDelete(null);
+    setDeleteError('');
+    setValidationError('');
+    setSuccessMessage('');
     resetForm();
   };
 
@@ -644,7 +715,7 @@ function MaterialsManagementPage() {
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-xl p-4 border border-base-200">
+          <div className="bg-white rounded-xl p-4 border border-gray-300 hover:shadow-lg transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-primary/10">
                 <FiPackage className="w-5 h-5 text-primary" />
@@ -656,7 +727,7 @@ function MaterialsManagementPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-4 border border-base-200">
+          <div className="bg-white rounded-xl p-4 border border-gray-300 hover:shadow-lg transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-error/10">
                 <FiAlertTriangle className="w-5 h-5 text-error" />
@@ -670,7 +741,7 @@ function MaterialsManagementPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-4 border border-base-200">
+          <div className="bg-white rounded-xl p-4 border border-gray-300 hover:shadow-lg transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-success/10">
                 <FiTrendingUp className="w-5 h-5 text-success" />
@@ -684,7 +755,7 @@ function MaterialsManagementPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-4 border border-base-200">
+          <div className="bg-white rounded-xl p-4 border border-gray-300 hover:shadow-lg transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-secondary/10">
                 <FiPackage className="w-5 h-5 text-secondary" />
@@ -701,7 +772,7 @@ function MaterialsManagementPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white border border-base-200 rounded-xl p-4 shadow-sm">
+      <div className="bg-white border border-gray-300 rounded-xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-[1.01] hover:-translate-y-1">
         <div className="grid grid-cols-12 gap-6">
           <div className="col-span-3">
             <label className="text-sm font-medium text-gray-700 mb-1.5 block">Search</label>
@@ -773,16 +844,16 @@ function MaterialsManagementPage() {
       </div>
 
       {/* Materials Table */}
-      <div className="bg-white border border-base-200 rounded-xl overflow-hidden shadow-sm">
+      <div className="bg-white border border-gray-300 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-[1.01] hover:-translate-y-1">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-base-200 bg-gray-50">
+              <tr className="border-b border-gray-300 bg-gray-50">
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Material Info</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock Status</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Inventory</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 bg-white">
@@ -860,19 +931,19 @@ function MaterialsManagementPage() {
                     <div className="flex justify-end items-center gap-2">
                       <button
                         onClick={() => handleViewMaterial(material.id)}
-                        className="p-1 text-gray-400 hover:text-gray-500 rounded-lg hover:bg-gray-100"
+                        className="p-1 text-black hover:text-gray-700 rounded-lg hover:bg-gray-100"
                       >
                         <FiEye className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleEditMaterial(material.id)}
-                        className="p-1 text-gray-400 hover:text-gray-500 rounded-lg hover:bg-gray-100"
+                        className="p-1 text-black hover:text-gray-700 rounded-lg hover:bg-gray-100"
                       >
                         <FiEdit2 className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDeleteMaterial(material.id)}
-                        className="p-1 text-error hover:text-error-focus rounded-lg hover:bg-error/5"
+                        className="p-1 text-black hover:text-gray-700 rounded-lg hover:bg-gray-100"
                       >
                         <FiTrash2 className="w-4 h-4" />
                       </button>
@@ -916,68 +987,73 @@ function MaterialsManagementPage() {
         </div>
       )}      {/* Create/Edit Modal */}
       {(showCreateModal || showEditModal) && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-60">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/20 backdrop-blur-sm">
           <div className="flex min-h-screen items-center justify-center p-4 md:p-6">
-            <div className="relative w-full max-w-2xl bg-white rounded-xl shadow-xl transform transition-all border border-gray-200">
-              <div className="px-6 py-5 border-b border-gray-200 rounded-t-xl bg-gray-50">
+            <div className="relative w-full max-w-2xl bg-gradient-to-br from-white/95 via-white/90 to-white/95 backdrop-blur-xl rounded-3xl shadow-2xl transform transition-all border border-gray-300 hover:shadow-3xl">
+              <div className="px-8 py-6 border-b border-gray-300 rounded-t-3xl bg-gradient-to-r from-primary/5 via-transparent to-secondary/5">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-semibold text-gray-900">
-                    {showCreateModal ? 'Add New Material' : 'Edit Material'}
-                  </h3>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-xl">
+                      <FiPackage className="w-5 h-5 text-primary" />
+                    </div>
+                    <h3 className="text-xl font-bold text-base-content">
+                      {showCreateModal ? 'Add New Material' : 'Edit Material'}
+                    </h3>
+                  </div>
                   <button
                     type="button"
                     onClick={handleCloseModal}
-                    className="text-gray-400 hover:text-gray-500 transition-colors p-2 rounded-lg hover:bg-gray-100"
+                    className="text-base-content/60 hover:text-base-content transition-colors p-2 rounded-xl hover:bg-gray-100/50 backdrop-blur-sm"
                   >
                     <FiX className="h-5 w-5" />
                   </button>
                 </div>
               </div>
-              <form onSubmit={showCreateModal ? handleCreateMaterial : handleUpdateMaterial} className="p-6">
+              <form onSubmit={showCreateModal ? handleCreateMaterial : handleUpdateMaterial} className="p-8">
                 <div className="space-y-6">
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 block mb-2">Name</label>
+                  <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-gray-300 shadow-sm">
+                    <label className="text-xs font-semibold text-base-content/70 block mb-2 uppercase tracking-wider">Name <span className="text-red-600">*</span></label> 
                     <input
                       type="text"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="input w-full h-11 px-4 text-sm bg-white border-gray-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20"
+                      className="w-full h-10 px-4 text-sm bg-white/80 border border-gray-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all duration-200"
                       placeholder="Enter material name"
                       required
                     />
                   </div>
 
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 block mb-2">Description</label>
+                  <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-gray-300 shadow-sm">
+                    <label className="text-xs font-semibold text-base-content/70 block mb-2 uppercase tracking-wider">Description</label>
                     <textarea
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      className="textarea w-full px-4 py-3 text-sm bg-white border-gray-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 min-h-[120px]"
+                      className="w-full px-4 py-3 text-sm bg-white/80 border border-gray-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all duration-200 min-h-[100px]"
                       placeholder="Enter material description"
-                      rows={4}
+                      rows={3}
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 block mb-2">Unit</label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-gray-300 shadow-sm">
+                      <label className="text-xs font-semibold text-base-content/70 block mb-2 uppercase tracking-wider">Unit</label>
                       <input
                         type="text"
                         value={formData.unit}
                         onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                        className="input w-full h-11 px-4 text-sm bg-white border-gray-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20"
+                        className="w-full h-10 px-4 text-sm bg-white/80 border border-gray-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all duration-200"
                         placeholder="pcs, kg, m, etc."
                         required
                       />
                     </div>
 
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 block mb-2">Current Stock</label>
+                    <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-gray-300 shadow-sm">
+                      <label className="text-xs font-semibold text-base-content/70 block mb-2 uppercase tracking-wider">Current Stock</label>
                       <input
                         type="number"
                         value={formData.qtyOnHand}
                         onChange={(e) => setFormData({ ...formData, qtyOnHand: parseInt(e.target.value) || 0 })}
-                        className="input w-full h-11 px-4 text-sm bg-white border-gray-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20"
+                        className="w-full h-10 px-4 text-sm bg-white/80 border border-gray-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all duration-200"
                         min="0"
                         placeholder="0"
                         required
@@ -985,27 +1061,27 @@ function MaterialsManagementPage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 block mb-2">Min Stock</label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-gray-300 shadow-sm">
+                      <label className="text-xs font-semibold text-base-content/70 block mb-2 uppercase tracking-wider">Min Stock</label>
                       <input
                         type="number"
                         value={formData.minStock}
                         onChange={(e) => setFormData({ ...formData, minStock: parseInt(e.target.value) || 0 })}
-                        className="input w-full h-11 px-4 text-sm bg-white border-gray-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20"
+                        className="w-full h-10 px-4 text-sm bg-white/80 border border-gray-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all duration-200"
                         min="0"
                         placeholder="0"
                         required
                       />
                     </div>
 
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 block mb-2">Max Stock</label>
+                    <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-gray-300 shadow-sm">
+                      <label className="text-xs font-semibold text-base-content/70 block mb-2 uppercase tracking-wider">Max Stock</label>
                       <input
                         type="number"
                         value={formData.maxStock}
                         onChange={(e) => setFormData({ ...formData, maxStock: parseInt(e.target.value) || 0 })}
-                        className="input w-full h-11 px-4 text-sm bg-white border-gray-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20"
+                        className="w-full h-10 px-4 text-sm bg-white/80 border border-gray-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all duration-200"
                         min="0"
                         placeholder="0"
                         required
@@ -1013,42 +1089,42 @@ function MaterialsManagementPage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 block mb-2">Location</label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-gray-300 shadow-sm">
+                      <label className="text-xs font-semibold text-base-content/70 block mb-2 uppercase tracking-wider">Location</label>
                       <input
                         type="text"
                         value={formData.location}
                         onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                        className="input w-full h-11 px-4 text-sm bg-white border-gray-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20"
+                        className="w-full h-10 px-4 text-sm bg-white/80 border border-gray-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all duration-200"
                         placeholder="e.g., Warehouse A, Shelf B3"
                       />
                     </div>
 
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 block mb-2">Attribute Type</label>
+                    <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-gray-300 shadow-sm">
+                      <label className="text-xs font-semibold text-base-content/70 block mb-2 uppercase tracking-wider">Attribute Type</label>
                       <input
                         type="text"
                         value={formData.attributeType}
                         onChange={(e) => setFormData({ ...formData, attributeType: e.target.value })}
-                        className="input w-full h-11 px-4 text-sm bg-white border-gray-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20"
+                        className="w-full h-10 px-4 text-sm bg-white/80 border border-gray-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all duration-200"
                         placeholder="e.g., Category, Material Type"
                       />
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-end gap-3 pt-6 mt-6 border-t border-gray-200">
+                <div className="flex items-center justify-end gap-4 pt-6 mt-6 border-t border-gray-300/50">
                   <button
                     type="button"
-                    className="btn h-11 px-6 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                    className="px-6 py-2 h-10 text-sm bg-white/80 border border-gray-300 text-base-content/70 hover:text-base-content rounded-xl hover:bg-gray-50 transition-all duration-200 font-medium"
                     onClick={handleCloseModal}
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="btn btn-primary h-11 px-6 rounded-lg"
+                    className="px-6 py-2 h-10 text-sm bg-primary text-primary-content border border-gray-300 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-[1.02] font-semibold"
                   >
                     {showCreateModal ? 'Create Material' : 'Save Changes'}
                   </button>
@@ -1061,86 +1137,97 @@ function MaterialsManagementPage() {
 
       {/* View Modal */}
       {showViewModal && selectedMaterial && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-60">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/20 backdrop-blur-sm">
           <div className="flex min-h-screen items-center justify-center p-4 md:p-6">
-            <div className="relative w-full max-w-2xl bg-white rounded-xl shadow-xl transform transition-all border border-gray-200">
-              <div className="px-6 py-5 border-b border-gray-200 rounded-t-xl bg-gray-50">
+            <div className="relative w-full max-w-2xl bg-gradient-to-br from-white/95 via-white/90 to-white/95 backdrop-blur-xl rounded-3xl shadow-2xl transform transition-all border border-gray-300 hover:shadow-3xl">
+              <div className="px-8 py-6 border-b border-gray-300 rounded-t-3xl bg-gradient-to-r from-info/5 via-transparent to-primary/5">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-semibold text-gray-900">{selectedMaterial.name}</h3>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-info/20 to-primary/20 rounded-xl">
+                      <FiEye className="w-5 h-5 text-info" />
+                    </div>
+                    <h3 className="text-xl font-bold text-base-content">{selectedMaterial.name}</h3>
+                  </div>
                   <button
                     type="button"
                     onClick={() => {
                       setShowViewModal(false);
                       setSelectedMaterial(null);
                     }}
-                    className="text-gray-400 hover:text-gray-500 transition-colors p-2 rounded-lg hover:bg-gray-100"
+                    className="text-base-content/60 hover:text-base-content transition-colors p-2 rounded-xl hover:bg-gray-100/50 backdrop-blur-sm"
                   >
                     <FiX className="h-5 w-5" />
                   </button>
                 </div>
               </div>
 
-              <div className="p-6">
+              <div className="p-8">
                 <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="p-4 rounded-lg border border-gray-200 bg-white">
-                      <label className="text-sm font-medium text-gray-500 block mb-1">Code</label>
-                      <p className="text-gray-900">{selectedMaterial.code || 'N/A'}</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-gray-300 shadow-sm">
+                      <label className="text-xs font-semibold text-base-content/70 block mb-2 uppercase tracking-wider">Code</label>
+                      <p className="text-base-content font-medium">{selectedMaterial.code || 'N/A'}</p>
                     </div>
-                    <div className="p-4 rounded-lg border border-gray-200 bg-white">
-                      <label className="text-sm font-medium text-gray-500 block mb-1">Category</label>
-                      <p className="text-gray-900">{selectedMaterial.attributeType || 'N/A'}</p>
+                    <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-gray-300 shadow-sm">
+                      <label className="text-xs font-semibold text-base-content/70 block mb-2 uppercase tracking-wider">Category</label>
+                      <p className="text-base-content font-medium">{selectedMaterial.attributeType || 'N/A'}</p>
                     </div>
                   </div>
 
-                  <div className="p-4 rounded-lg border border-gray-200 bg-white">
-                    <label className="text-sm font-medium text-gray-500 block mb-1">Description</label>
-                    <p className="text-gray-900 whitespace-pre-line">{selectedMaterial.description || 'No description available.'}</p>
+                  <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-gray-300 shadow-sm">
+                    <label className="text-xs font-semibold text-base-content/70 block mb-2 uppercase tracking-wider">Description</label>
+                    <p className="text-base-content whitespace-pre-line leading-relaxed">{selectedMaterial.description || 'No description available.'}</p>
                   </div>
 
-                  <div className="p-6 rounded-lg border border-gray-200 bg-gray-50">
-                    <h4 className="text-sm font-medium text-gray-900 mb-4">Stock Information</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <label className="text-sm font-medium text-gray-500 block mb-1">Current Stock</label>
-                        <p className="text-gray-900">{selectedMaterial.qtyOnHand || 0} {selectedMaterial.unit}</p>
+                  <div className="bg-white/40 backdrop-blur-sm rounded-xl p-6 border border-gray-300 shadow-sm">
+                    <h4 className="text-sm font-bold text-base-content mb-4 uppercase tracking-wider flex items-center gap-2">
+                      <FiTrendingUp className="w-4 h-4" />
+                      Stock Information
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-gray-200">
+                        <label className="text-xs font-semibold text-base-content/70 block mb-1 uppercase tracking-wider">Current Stock</label>
+                        <p className="text-base-content font-bold text-lg">{selectedMaterial.qtyOnHand || 0} {selectedMaterial.unit}</p>
                       </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-500 block mb-1">Min Stock</label>
-                        <p className="text-gray-900">{selectedMaterial.minStock || 0} {selectedMaterial.unit}</p>
+                      <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-gray-200">
+                        <label className="text-xs font-semibold text-base-content/70 block mb-1 uppercase tracking-wider">Min Stock</label>
+                        <p className="text-base-content font-bold text-lg">{selectedMaterial.minStock || 0} {selectedMaterial.unit}</p>
                       </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-500 block mb-1">Location</label>
-                        <p className="text-gray-900">{selectedMaterial.location || 'N/A'}</p>
+                      <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-gray-200">
+                        <label className="text-xs font-semibold text-base-content/70 block mb-1 uppercase tracking-wider">Location</label>
+                        <p className="text-base-content font-medium">{selectedMaterial.location || 'N/A'}</p>
                       </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-500 block mb-1">Status</label>
+                      <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-gray-200">
+                        <label className="text-xs font-semibold text-base-content/70 block mb-1 uppercase tracking-wider">Status</label>
                         <div className="mt-1">{getStockStatusBadge(selectedMaterial)}</div>
                       </div>
                     </div>
                   </div>
 
                   {selectedMaterial.latestPurchase && (
-                    <div className="p-6 rounded-lg border border-gray-200 bg-gray-50">
-                      <h4 className="text-sm font-medium text-gray-900 mb-4">Latest Purchase</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                          <label className="text-sm font-medium text-gray-500 block mb-1">Date</label>
-                          <p className="text-gray-900">{new Date(selectedMaterial.latestPurchase.date).toLocaleDateString()}</p>
+                    <div className="bg-white/40 backdrop-blur-sm rounded-xl p-6 border border-gray-300 shadow-sm">
+                      <h4 className="text-sm font-bold text-base-content mb-4 uppercase tracking-wider flex items-center gap-2">
+                        <FiPackage className="w-4 h-4" />
+                        Latest Purchase
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-gray-200">
+                          <label className="text-xs font-semibold text-base-content/70 block mb-1 uppercase tracking-wider">Date</label>
+                          <p className="text-base-content font-medium">{new Date(selectedMaterial.latestPurchase.date).toLocaleDateString()}</p>
                         </div>
-                        <div>
-                          <label className="text-sm font-medium text-gray-500 block mb-1">Supplier</label>
-                          <p className="text-gray-900">{selectedMaterial.latestPurchase.supplier}</p>
+                        <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-gray-200">
+                          <label className="text-xs font-semibold text-base-content/70 block mb-1 uppercase tracking-wider">Supplier</label>
+                          <p className="text-base-content font-medium">{selectedMaterial.latestPurchase.supplier}</p>
                         </div>
                       </div>
                     </div>
                   )}
                 </div>
 
-                <div className="flex items-center justify-end gap-3 pt-6 mt-6 border-t border-gray-200">
+                <div className="flex items-center justify-end gap-4 pt-6 mt-6 border-t border-gray-300/50">
                   <button
                     type="button"
-                    className="btn h-11 px-6 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                    className="px-6 py-2 h-10 text-sm bg-white/80 border border-gray-300 text-base-content/70 hover:text-base-content rounded-xl hover:bg-gray-50 transition-all duration-200 font-medium"
                     onClick={() => {
                       setShowViewModal(false);
                       setSelectedMaterial(null);
@@ -1150,7 +1237,7 @@ function MaterialsManagementPage() {
                   </button>
                   <button
                     type="button"
-                    className="btn btn-primary h-11 px-6 rounded-lg"
+                    className="px-6 py-2 h-10 text-sm bg-primary text-primary-content border border-gray-300 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-[1.02] font-semibold"
                     onClick={() => {
                       setShowViewModal(false);
                       handleEditMaterial(selectedMaterial.id);
@@ -1159,6 +1246,206 @@ function MaterialsManagementPage() {
                     Edit
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && materialToDelete && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gradient-to-br from-white/95 via-white/90 to-white/95 backdrop-blur-xl rounded-3xl border border-gray-300 shadow-2xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center justify-center mb-6">
+                <div className="bg-gradient-to-br from-red-100 to-red-200 p-3 rounded-full">
+                  <FiAlertTriangle className="w-8 h-8 text-red-600" />
+                </div>
+              </div>
+              
+              <h3 className="text-xl font-bold text-gray-900 text-center mb-4">
+                Delete Material
+              </h3>
+              
+              <div className="mb-6">
+                <p className="text-gray-600 text-center mb-4">
+                  Are you sure you want to delete this material? This action cannot be undone.
+                </p>
+                
+                <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                    <span className="font-semibold text-red-800">{materialToDelete.name}</span>
+                  </div>
+                  <p className="text-sm text-red-700 ml-6">
+                    Current Stock: {materialToDelete.qtyOnHand} {materialToDelete.unit}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  className="flex-1 px-4 py-2 bg-white/80 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all duration-200 font-medium"
+                  onClick={() => setShowDeleteModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all duration-200 font-medium"
+                  onClick={confirmDeleteMaterial}
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Error Modal */}
+      {showErrorModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gradient-to-br from-white/95 via-white/90 to-white/95 backdrop-blur-xl rounded-3xl border border-gray-300 shadow-2xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center justify-center mb-6">
+                <div className="bg-gradient-to-br from-red-100 to-red-200 p-3 rounded-full">
+                  <FiX className="w-8 h-8 text-red-600" />
+                </div>
+              </div>
+              
+              <h3 className="text-xl font-bold text-gray-900 text-center mb-4">
+                Cannot Delete Material
+              </h3>
+              
+                             <div className="mb-6">
+                 <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                   <p className="text-red-800 text-sm font-medium mb-2">Why can&apos;t this material be deleted?</p>
+                   <p className="text-red-700 text-sm">
+                     {deleteError.includes('existing movements') ? 
+                       'This material has transaction history (movements) in the system.' :
+                       deleteError.includes('remaining material records') ?
+                       'This material has associated records that must be removed first.' :
+                       deleteError
+                     }
+                   </p>
+                 </div>
+                
+                                 {(deleteError.includes('existing movements') || deleteError.includes('remaining material records')) && (
+                   <div className="mt-4 bg-blue-50 border border-blue-200 rounded-xl p-4">
+                     <p className="text-blue-800 text-sm font-medium mb-2">💡 Suggestions to resolve this issue:</p>
+                     <div className="text-blue-700 text-sm space-y-2">
+                       <div className="flex items-start gap-2">
+                         <span className="text-blue-600 font-bold">1.</span>
+                         <span>Archive this material instead of deleting it to preserve data integrity</span>
+                       </div>
+                       <div className="flex items-start gap-2">
+                         <span className="text-blue-600 font-bold">2.</span>
+                         <span>Contact administrator to safely remove all movement history and associated records</span>
+                       </div>
+                       <div className="flex items-start gap-2">
+                         <span className="text-blue-600 font-bold">3.</span>
+                         <span>Manually clear all material movements from the system first, then try deleting again</span>
+                       </div>
+                     </div>
+                   </div>
+                 )}
+              </div>
+              
+                             <div className="flex gap-3 justify-center">
+                 <button
+                   type="button"
+                   className="px-4 py-2 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition-all duration-200 font-medium"
+                   onClick={() => setShowErrorModal(false)}
+                 >
+                   OK
+                 </button>
+                 {(deleteError.includes('existing movements') || deleteError.includes('remaining material records')) && (
+                   <button
+                     type="button"
+                     className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-200 font-medium"
+                     onClick={() => {
+                       setShowErrorModal(false);
+                       // Navigate to material movements page
+                       window.location.href = '/dashboard/material-movement';
+                     }}
+                   >
+                     View Movements
+                   </button>
+                 )}
+               </div>
+            </div>
+                     </div>
+         </div>
+       )}
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gradient-to-br from-white/95 via-white/90 to-white/95 backdrop-blur-xl rounded-3xl border border-gray-300 shadow-2xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center justify-center mb-6">
+                <div className="bg-gradient-to-br from-green-100 to-green-200 p-3 rounded-full">
+                  <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                </div>
+              </div>
+              
+              <h3 className="text-xl font-bold text-gray-900 text-center mb-4">
+                Success!
+              </h3>
+              
+              <div className="mb-6">
+                <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                  <p className="text-green-800 text-sm text-center">{successMessage}</p>
+                </div>
+              </div>
+              
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  className="px-6 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all duration-200 font-medium"
+                  onClick={() => setShowSuccessModal(false)}
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </div>
+                 </div>
+       )}
+
+      {/* Validation Error Modal */}
+      {showValidationModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gradient-to-br from-white/95 via-white/90 to-white/95 backdrop-blur-xl rounded-3xl border border-gray-300 shadow-2xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center justify-center mb-6">
+                <div className="bg-gradient-to-br from-orange-100 to-orange-200 p-3 rounded-full">
+                  <FiAlertTriangle className="w-8 h-8 text-orange-600" />
+                </div>
+              </div>
+              
+              <h3 className="text-xl font-bold text-gray-900 text-center mb-4">
+                Validation Error
+              </h3>
+              
+              <div className="mb-6">
+                <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+                  <p className="text-orange-800 text-sm text-center">{validationError}</p>
+                </div>
+              </div>
+              
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  className="px-6 py-2 bg-orange-600 text-white rounded-xl hover:bg-orange-700 transition-all duration-200 font-medium"
+                  onClick={() => setShowValidationModal(false)}
+                >
+                  OK
+                </button>
               </div>
             </div>
           </div>

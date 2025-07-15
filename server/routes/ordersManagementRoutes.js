@@ -12,6 +12,7 @@ const {
   deleteOrder,
   getOrderTimeline
 } = require('../controllers/ordersManagementController');
+const { generateOrderLink } = require('../controllers/orderLinkController')
 
 const router = express.Router();
 
@@ -84,5 +85,11 @@ router.delete('/:id', protect, deleteOrder);
  * Clear workers cache (for admin use or when worker data changes)
  */
 router.post('/cache/clear-workers', clearWorkersCache);
+
+/**
+ * POST /api/orders-management/:id/generate-link
+ * Generate a unique link for an order
+ */
+router.post('/:id/generate-link', protect, generateOrderLink);
 
 module.exports = router; 

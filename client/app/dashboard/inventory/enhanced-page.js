@@ -427,7 +427,7 @@ export default function EnhancedInventoryPage() {
                 <form onSubmit={handleAddItem}>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Name *</label>
+                      <label className="block text-sm font-medium text-gray-700">Name <span className="text-red-600">*</span></label>
                       <input
                         type="text"
                         value={formData.name}

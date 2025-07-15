@@ -1125,6 +1125,42 @@ const deleteOrderLink = asyncHandler(async (req, res) => {
     }
 });
 
+const generateOrderLink = asyncHandler(async (req, res) => {
+  try {
+    const { id } = req.params
+    const userId = req.user?.id
+    if (!id) return res.status(400).json({ success: false, message: 'Order ID required' })
+
+    // Cek order ada
+    const order = await prisma.order.findFirst({ where: { id: parseInt(id), isActive: true } })
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found' })
+
+    // Cek link aktif yang sudah ada
+    let orderLink = await prisma.orderLink.findFirst({ where: { orderId: parseInt(id), isActive: true } })
+    if (!orderLink) {
+      // Generate token unik
+      let linkToken, tokenExists = true
+      while (tokenExists) {
+        linkToken = generateToken()
+        const existing = await prisma.orderLink.findFirst({ where: { linkToken } })
+        tokenExists = !!existing
+      }
+      // Simpan ke DB
+      orderLink = await prisma.orderLink.create({
+        data: {
+          orderId: parseInt(id),
+          userId,
+          linkToken,
+          isActive: true
+        }
+      })
+    }
+    res.json({ success: true, orderLink: { token: orderLink.linkToken } })
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message })
+  }
+})
+
 module.exports = {
     getOrderByToken,
     createOrderLink,
@@ -1133,5 +1169,6 @@ module.exports = {
     submitRemainingMaterials,
     getOrderLinkStatus,
     updateOrderLink,
-    deleteOrderLink
+    deleteOrderLink,
+    generateOrderLink
 }; 

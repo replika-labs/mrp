@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import AuthWrapper from '../../../../components/AuthWrapper';
-import DashboardLayout from '../../../../components/DashboardLayout.js.bak';
+import DashboardLayout from '../../../../components/DashboardLayout';
 import Link from 'next/link';
 
 export default function ProductStockPage() {

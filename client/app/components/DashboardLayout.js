@@ -1,18 +1,13 @@
 'use client'
 
-import Navbar from './layout/Navbar'
-
 export default function DashboardLayout({ children }) {
-    return (<div className="flex flex-col h-full w-full">
-        <Navbar />
-
-        <div className="flex-1 overflow-auto w-full">
-            <main className="h-full w-full p-6 lg:px-8">
-                <div className="w-full">
+    return (
+        <main className="flex-1 bg-base-200/30">
+            <div className="container mx-auto max-w-full px-4 sm:px-6 lg:px-8 py-6">
+                <div className="w-full max-w-none">
                     {children}
                 </div>
+                </div>
             </main>
-        </div>
-    </div>
     )
 }

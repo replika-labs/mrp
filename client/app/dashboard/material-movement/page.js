@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/app/components/DashboardLayout';
 import AuthWrapper from '@/app/components/AuthWrapper';
+import { FiPackage, FiSearch, FiX, FiCheck, FiBarChart, FiArrowDown, FiArrowUp, FiRefreshCw } from 'react-icons/fi';
 
 export default function MaterialMovementPage() {
   const router = useRouter();
@@ -373,13 +374,19 @@ export default function MaterialMovementPage() {
   return (
     <AuthWrapper>
       <DashboardLayout>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Material Movement</h1>
-              <p className="mt-1 text-sm text-gray-600">
-                Manage material inflow and outflow with purchase integration
-              </p>
+        <div className="space-y-8">
+          {/* Header */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 backdrop-blur-xl rounded-3xl p-8 border border-gray-300 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.01] hover:-translate-y-1">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-2xl flex-shrink-0">
+                <FiPackage className="w-8 h-8 text-primary" />
+              </div>
+              <div className="flex flex-col justify-start -mt-1">
+                <h1 className="text-2xl font-bold text-base-content bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent leading-tight">
+                  Material Movement
+                </h1>
+                <p className="text-sm text-base-content/60 leading-tight -mt-5">Manage material inflow and outflow with purchase integration</p>
+              </div>
             </div>
             {/* <div className="flex space-x-3">
               <button
@@ -402,28 +409,46 @@ export default function MaterialMovementPage() {
 
           {/* Error and Success Messages */}
           {error && (
-            <div className="bg-red-600 border border-red-700 text-white px-4 py-3 rounded relative mb-4">
-              <span className="block sm:inline">{error}</span>
+            <div className="bg-gradient-to-r from-red-50 to-red-100 border border-red-300 rounded-3xl p-4 shadow-lg backdrop-blur-xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center w-8 h-8 bg-red-200 rounded-xl">
+                    <FiX className="w-5 h-5 text-red-600" />
+                  </div>
+                  <span className="text-red-800 font-medium">{error}</span>
+                </div>
               <button
                 onClick={() => setError(null)}
-                className="absolute top-0 bottom-0 right-0 px-4 py-3 text-white hover:text-red-100"
+                  className="text-red-600 hover:text-red-800 transition-colors duration-200"
               >
                 <span className="sr-only">Dismiss</span>
-                ×
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"/>
+                  </svg>
               </button>
+              </div>
             </div>
           )}
 
           {success && (
-            <div className="bg-green-600 border border-green-700 text-white px-4 py-3 rounded relative mb-4">
-              <span className="block sm:inline">{success}</span>
+            <div className="bg-gradient-to-r from-green-50 to-green-100 border border-green-300 rounded-3xl p-4 shadow-lg backdrop-blur-xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center w-8 h-8 bg-green-200 rounded-xl">
+                    <FiCheck className="w-5 h-5 text-green-600" />
+                  </div>
+                  <span className="text-green-800 font-medium">{success}</span>
+                </div>
               <button
                 onClick={() => setSuccess(null)}
-                className="absolute top-0 bottom-0 right-0 px-4 py-3 text-white hover:text-green-100"
+                  className="text-green-600 hover:text-green-800 transition-colors duration-200"
               >
                 <span className="sr-only">Dismiss</span>
-                ×
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"/>
+                  </svg>
               </button>
+              </div>
             </div>
           )}
 
@@ -440,7 +465,7 @@ export default function MaterialMovementPage() {
                       <div className="flex items-center">
                         <div className="flex-shrink-0">
                           <div className="w-8 h-8 bg-blue-600 rounded-md flex items-center justify-center">
-                            <span className="text-white text-sm font-medium">📊</span>
+                            <FiBarChart className="w-4 h-4 text-white" />
                           </div>
                         </div>
                         <div className="ml-5 w-0 flex-1">
@@ -465,9 +490,13 @@ export default function MaterialMovementPage() {
                             <div className={`w-8 h-8 rounded-md flex items-center justify-center ${typeData.movementType === 'IN' ? 'bg-green-600' :
                               typeData.movementType === 'OUT' ? 'bg-red-600' : 'bg-gray-600'
                               }`}>
-                              <span className="text-white text-sm font-medium">
-                                {typeData.movementType === 'IN' ? '⬇️' : typeData.movementType === 'OUT' ? '⬆️' : '🔄'}
-                              </span>
+                              {typeData.movementType === 'IN' ? (
+                                <FiArrowDown className="w-4 h-4 text-white" />
+                              ) : typeData.movementType === 'OUT' ? (
+                                <FiArrowUp className="w-4 h-4 text-white" />
+                              ) : (
+                                <FiRefreshCw className="w-4 h-4 text-white" />
+                              )}
                             </div>
                           </div>
                           <div className="ml-5 w-0 flex-1">
@@ -491,15 +520,18 @@ export default function MaterialMovementPage() {
 
 
           {/* Filters */}
-          <div className="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
-            <div className="px-4 py-5 sm:p-6">
-              <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-                Filters
-              </h3>
-              <div className="grid grid-cols-1 gap-y-4 gap-x-4 sm:grid-cols-6">
+          <div className="bg-gradient-to-br from-secondary/5 via-transparent to-primary/5 backdrop-blur-xl rounded-3xl p-8 border border-gray-300 shadow-xl hover:shadow-2xl transition-all duration-500">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-secondary/20 to-primary/20 rounded-xl">
+                <FiSearch className="w-5 h-5 text-info" />
+              </div>
+              <h3 className="text-lg font-semibold text-base-content">Filters</h3>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
                 {/* Movement Type Filter */}
-                <div className="sm:col-span-1">
-                  <label htmlFor="typeFilter" className="block text-sm font-medium text-gray-700">
+              <div className="bg-gray-100 backdrop-blur-sm rounded-xl p-3 border border-gray-300 shadow-sm hover:shadow-md transition-all duration-300">
+                <label htmlFor="typeFilter" className="block text-xs font-medium text-base-content/70 mb-2 truncate">
                     Type
                   </label>
                   <select
@@ -507,7 +539,7 @@ export default function MaterialMovementPage() {
                     name="movementType"
                     value={filter.movementType}
                     onChange={handleFilterChange}
-                    className="mt-1 block w-full px-3 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                  className="w-full h-8 px-3 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-gray-50 transition-all duration-200"
                   >
                     <option value="">All Types</option>
                     <option value="IN">IN</option>
@@ -517,8 +549,8 @@ export default function MaterialMovementPage() {
                 </div>
 
                 {/* Material Filter */}
-                <div className="sm:col-span-2">
-                  <label htmlFor="materialFilter" className="block text-sm font-medium text-gray-700">
+              <div className="md:col-span-2 bg-gray-100 backdrop-blur-sm rounded-xl p-3 border border-gray-300 shadow-sm hover:shadow-md transition-all duration-300">
+                <label htmlFor="materialFilter" className="block text-xs font-medium text-base-content/70 mb-2 truncate">
                     Material
                   </label>
                   <select
@@ -526,7 +558,7 @@ export default function MaterialMovementPage() {
                     name="materialId"
                     value={filter.materialId}
                     onChange={handleFilterChange}
-                    className="mt-1 block w-full px-3 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                  className="w-full h-8 px-3 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-gray-50 transition-all duration-200"
                   >
                     <option value="">All Materials</option>
                     {Array.isArray(materials) && materials.map((material) => (
@@ -538,8 +570,8 @@ export default function MaterialMovementPage() {
                 </div>
 
                 {/* Date From */}
-                <div className="sm:col-span-1">
-                  <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">
+              <div className="bg-gray-100 backdrop-blur-sm rounded-xl p-3 border border-gray-300 shadow-sm hover:shadow-md transition-all duration-300">
+                <label htmlFor="startDate" className="block text-xs font-medium text-base-content/70 mb-2 truncate">
                     From
                   </label>
                   <input
@@ -548,13 +580,13 @@ export default function MaterialMovementPage() {
                     id="startDate"
                     value={filter.startDate}
                     onChange={handleFilterChange}
-                    className="mt-1 px-3 py-2 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                  className="w-full h-8 px-3 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-gray-50 transition-all duration-200"
                   />
                 </div>
 
                 {/* Date To */}
-                <div className="sm:col-span-1">
-                  <label htmlFor="endDate" className="block text-sm font-medium text-gray-700">
+              <div className="bg-gray-100 backdrop-blur-sm rounded-xl p-3 border border-gray-300 shadow-sm hover:shadow-md transition-all duration-300">
+                <label htmlFor="endDate" className="block text-xs font-medium text-base-content/70 mb-2 truncate">
                     To
                   </label>
                   <input
@@ -563,24 +595,15 @@ export default function MaterialMovementPage() {
                     id="endDate"
                     value={filter.endDate}
                     onChange={handleFilterChange}
-                    className="mt-1 px-3 py-2 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                  className="w-full h-8 px-3 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-gray-50 transition-all duration-200"
                   />
                 </div>
-
-                {/* Reset Button */}
-                <div className="sm:col-span-1 flex items-end">
-                  <button
-                    type="button"
-                    onClick={resetFilters}
-                    className="w-full py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    Reset
-                  </button>
                 </div>
 
-                {/* Search */}
-                <div className="sm:col-span-6">
-                  <label htmlFor="search" className="block text-sm font-medium text-gray-700">
+            {/* Search Bar - Full Width */}
+            <div className="mb-4">
+              <div className="bg-gray-100 backdrop-blur-sm rounded-xl p-3 border border-gray-300 shadow-sm hover:shadow-md transition-all duration-300">
+                <label htmlFor="search" className="block text-xs font-medium text-base-content/70 mb-2 truncate">
                     Search
                   </label>
                   <input
@@ -589,112 +612,137 @@ export default function MaterialMovementPage() {
                     id="search"
                     value={filter.search}
                     onChange={handleFilterChange}
-                    className="mt-1 px-3 py-2 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                  className="w-full h-8 px-3 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-gray-50 transition-all duration-200"
                     placeholder="Search by notes, material name, or code"
                   />
                 </div>
               </div>
+
+            {/* Reset Button - Separate and Right Aligned */}
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="px-6 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-sm hover:shadow-md"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Reset
+              </button>
             </div>
           </div>
 
           {/* Material Movements Table */}
-          <div className="bg-white shadow-sm border border-gray-200 overflow-hidden sm:rounded-lg">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">
+          <div className="bg-gradient-to-br from-accent/5 via-transparent to-primary/5 backdrop-blur-xl rounded-3xl p-0 border border-gray-300 shadow-xl hover:shadow-2xl transition-all duration-500">
+            <div className="flex items-center justify-between p-6 border-b border-gray-300 bg-gradient-to-r from-gray-100 to-gray-50 rounded-t-3xl">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-accent/20 to-primary/20 rounded-xl">
+                  <FiPackage className="w-5 h-5 text-primary" />
+                </div>
+                <h3 className="text-lg font-semibold text-base-content">
                 Material Movements ({pagination.total || 0} total)
               </h3>
+              </div>
             </div>
             <div className="overflow-x-auto">
               {loading ? (
-                <div className="py-12 flex justify-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                <div className="p-12">
+                  <div className="flex flex-col items-center justify-center gap-4">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                    <span className="text-base-content/70 font-medium">Loading material movements...</span>
+                  </div>
                 </div>
               ) : (
                 <>
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <table className="table w-full">
+                    <thead>
+                      <tr className="bg-gradient-to-r from-gray-200 to-gray-100 border-b border-gray-300">
+                        <th className="text-left py-4 px-6 font-semibold text-base-content/80 w-1/8">
                           Date
                         </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="text-left py-4 px-6 font-semibold text-base-content/80 w-1/8">
                           Type
                         </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="text-left py-4 px-6 font-semibold text-base-content/80 w-1/4">
                           Material
                         </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="text-left py-4 px-6 font-semibold text-base-content/80 w-1/8">
                           Quantity
                         </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="text-left py-4 px-6 font-semibold text-base-content/80 w-1/8">
                           Stock After
                         </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="text-left py-4 px-6 font-semibold text-base-content/80 w-1/8">
                           Cost
                         </th>
-                        {/* <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        {/* <th className="text-left py-4 px-6 font-semibold text-base-content/80">
                           User
                         </th> */}
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="text-left py-4 px-6 font-semibold text-base-content/80 w-1/4">
                           Description
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
+                    <tbody>
                       {movements.length === 0 ? (
                         <tr>
                           <td colSpan="7" className="px-6 py-12 text-center">
-                            <div className="text-gray-400">
+                            <div className="text-base-content/40">
                               <svg className="mx-auto h-12 w-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m13-8V4a1 1 0 00-1-1H7a1 1 0 00-1 1v1m8 0V4.5" />
                               </svg>
-                              <p className="text-sm font-medium text-gray-900">No material movements found</p>
-                              <p className="text-sm text-gray-500">Material movements will appear here when they are created.</p>
+                              <p className="text-sm font-medium text-base-content">No material movements found</p>
+                              <p className="text-sm text-base-content/50">Material movements will appear here when they are created.</p>
                             </div>
                           </td>
                         </tr>
                       ) : (
                         movements.map((movement) => (
-                          <tr key={movement.id} className="hover:bg-gray-50 transition-colors">
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <tr key={movement.id} className="border-b border-gray-200 hover:bg-gray-50/50 transition-colors duration-200">
+                            <td className="py-5 px-6 align-middle text-sm text-base-content">
                               {formatDate(movement.movementDate)}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getMovementTypeBadge(movement.movementType)}`}>
+                            <td className="py-5 px-6 align-middle">
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border whitespace-nowrap ${
+                                movement.movementType === 'IN' ? 'bg-green-100 text-green-800 border-green-200' :
+                                movement.movementType === 'OUT' ? 'bg-red-100 text-red-800 border-red-200' :
+                                'bg-gray-100 text-gray-600 border-gray-200'
+                              }`}>
                                 {movement.movementType}
                               </span>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
+                            <td className="py-5 px-6 align-middle">
                               {movement.material ? (
                                 <div>
-                                  <div className="text-sm font-medium text-gray-900">{movement.material.name}</div>
-                                  <div className="text-xs text-gray-500">
+                                  <div className="text-sm font-medium text-base-content">{movement.material.name}</div>
+                                  <div className="text-xs text-base-content/50 mt-1">
                                     Code: {movement.material.code}
                                   </div>
                                 </div>
                               ) : (
-                                <span className="text-sm text-gray-400 italic">Unknown Material</span>
+                                <span className="text-sm text-base-content/40 italic">Unknown Material</span>
                               )}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm font-medium text-gray-900">{movement.quantity}</div>
-                              <div className="text-xs text-gray-500">{movement.unit}</div>
+                            <td className="py-5 px-6 align-middle">
+                              <div className="text-sm font-medium text-base-content">{movement.quantity}</div>
+                              <div className="text-xs text-base-content/50 mt-1">{movement.unit}</div>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm font-medium text-gray-900">{movement.qtyAfter}</div>
-                              <div className="text-xs text-gray-500">{movement.unit}</div>
+                            <td className="py-5 px-6 align-middle">
+                              <div className="text-sm font-medium text-base-content">{movement.qtyAfter}</div>
+                              <div className="text-xs text-base-content/50 mt-1">{movement.unit}</div>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            <td className="py-5 px-6 align-middle text-sm font-medium text-base-content">
                               {formatCurrency(movement.totalCost)}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <td className="py-5 px-6 align-middle text-sm text-base-content">
                               {movement.purchaseLog ? (
                                 <div>
                                   <div className="font-medium text-blue-600">Purchase</div>
-                                  <div className="text-xs text-gray-500">from {movement.purchaseLog.supplier}</div>
+                                  <div className="text-xs text-base-content/50 mt-1">from {movement.purchaseLog.supplier}</div>
                                 </div>
                               ) : (
-                                <span className="text-gray-400">-</span>
+                                <span className="text-base-content/40">-</span>
                               )}
                             </td>
                           </tr>
@@ -705,69 +753,30 @@ export default function MaterialMovementPage() {
 
                   {/* Pagination */}
                   {pagination.pages > 1 && (
-                    <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-                      <div className="flex-1 flex justify-between sm:hidden">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-6 border-t border-gray-300 bg-gradient-to-r from-gray-50 to-white rounded-b-3xl">
+                      <div className="text-sm text-base-content/70">
+                        Showing <span className="font-medium">{((pagination.current - 1) * pagination.limit) + 1}</span> to{' '}
+                        <span className="font-medium">{Math.min(pagination.current * pagination.limit, pagination.total)}</span> of{' '}
+                        <span className="font-medium">{pagination.total}</span> results
+                      </div>
+                      <div className="flex items-center gap-2">
                         <button
                           onClick={() => handlePageChange(pagination.current - 1)}
                           disabled={pagination.current <= 1}
-                          className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                          className="px-4 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center"
                         >
-                          Previous
+                          « Previous
                         </button>
+                        <span className="px-4 py-2 text-sm bg-primary text-primary-content border border-gray-300 rounded-lg font-medium">
+                          Page {pagination.current} of {pagination.pages}
+                        </span>
                         <button
                           onClick={() => handlePageChange(pagination.current + 1)}
                           disabled={pagination.current >= pagination.pages}
-                          className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                          className="px-4 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center"
                         >
-                          Next
+                          Next »
                         </button>
-                      </div>
-                      <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                        <div>
-                          <p className="text-sm text-gray-700">
-                            Showing{' '}
-                            <span className="font-medium">
-                              {((pagination.current - 1) * pagination.limit) + 1}
-                            </span>{' '}
-                            to{' '}
-                            <span className="font-medium">
-                              {Math.min(pagination.current * pagination.limit, pagination.total)}
-                            </span>{' '}
-                            of{' '}
-                            <span className="font-medium">{pagination.total}</span>{' '}
-                            results
-                          </p>
-                        </div>
-                        <div>
-                          <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                            <button
-                              onClick={() => handlePageChange(pagination.current - 1)}
-                              disabled={pagination.current <= 1}
-                              className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
-                            >
-                              Previous
-                            </button>
-                            {Array.from({ length: pagination.pages }, (_, i) => i + 1).map((page) => (
-                              <button
-                                key={page}
-                                onClick={() => handlePageChange(page)}
-                                className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${page === pagination.current
-                                  ? 'z-10 bg-blue-600 border-blue-700 text-white'
-                                  : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                                  }`}
-                              >
-                                {page}
-                              </button>
-                            ))}
-                            <button
-                              onClick={() => handlePageChange(pagination.current + 1)}
-                              disabled={pagination.current >= pagination.pages}
-                              className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
-                            >
-                              Next
-                            </button>
-                          </nav>
-                        </div>
                       </div>
                     </div>
                   )}

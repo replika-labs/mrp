@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AuthWrapper from '../../../../components/AuthWrapper';
-import DashboardLayout from '../../../../components/DashboardLayout.js.bak';
+import DashboardLayout from '../../../../components/DashboardLayout';
 import ProductSelector from '../../../../components/ProductSelector';
 
 export default function EditOrder({ params }) {
@@ -185,7 +185,7 @@ export default function EditOrder({ params }) {
             {/* Status (Edit page specific field) */}
             <div>
               <label htmlFor="status" className="block text-sm font-medium text-gray-700">
-                Status *
+                Status <span className="text-red-600">*</span>
               </label>
               <select
                 id="status"
@@ -211,7 +211,7 @@ export default function EditOrder({ params }) {
             {/* Due Date */}
             <div>
               <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700">
-                Due Date *
+                Due Date <span className="text-red-600">*</span>
               </label>
               <input
                 type="date"
@@ -278,7 +278,7 @@ export default function EditOrder({ params }) {
             {/* Product Selection */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Products & Quantities *
+                Products & Quantities <span className="text-red-600">*</span>
               </label>
               <ProductSelector
                 selectedProducts={formData.products}

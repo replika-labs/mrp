@@ -3,7 +3,7 @@
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import AuthWrapper from '../../../components/AuthWrapper';
-import DashboardLayout from '../../../components/DashboardLayout.js.bak';
+import DashboardLayout from '../../../components/DashboardLayout.js';
 
 export default function EditUserPage({ params }) {
   const userId = use(params).id;
