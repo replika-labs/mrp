@@ -121,7 +121,6 @@ model Order {
   materialMovements    MaterialMovement[]
   progressReports      ProgressReport[]
   orderLink            OrderLink?
-  shipment             Shipment?
   statusChanges        StatusChange[]
   purchaseAlerts       MaterialPurchaseAlert[]
   contactNotes         ContactNote[]
@@ -285,23 +284,6 @@ model OrderLink {
   @@map("order_links")
 }
 
-model Shipment {
-  id             Int       @id @default(autoincrement())
-  orderId        Int       @unique @map("orderId")
-  trackingNumber String?   @map("trackingNumber")
-  carrier        String?
-  shippedDate    DateTime? @map("shippedDate")
-  deliveredDate  DateTime? @map("deliveredDate")
-  status         ShipmentStatus @default(PENDING)
-  notes          String?
-  createdAt      DateTime  @default(now()) @map("createdAt")
-  updatedAt      DateTime  @updatedAt @map("updatedAt")
-
-  // Relations
-  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
-
-  @@map("shipments")
-}
 
 model RecurringPlan {
   id          Int      @id @default(autoincrement())
