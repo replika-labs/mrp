@@ -31,11 +31,11 @@ async function main() {
         const hashedPassword = await bcrypt.hash('admin123', 10)
 
         const adminUser = await prisma.user.upsert({
-            where: { email: 'admin@hijabwms.com' },
+            where: { email: 'admin@roselover.com' },
             update: {},
             create: {
                 name: 'Hijab Store Administrator',
-                email: 'admin@hijabwms.com',
+                email: 'admin@roselover.com',
                 passwordHash: hashedPassword,
                 role: 'ADMIN',
                 phone: '+62812345678',
@@ -49,11 +49,11 @@ async function main() {
 
         // Create operator user
         const operatorUser = await prisma.user.upsert({
-            where: { email: 'operator@hijabwms.com' },
+            where: { email: 'operator@hijab.com' },
             update: {},
             create: {
                 name: 'Warehouse Operator',
-                email: 'operator@hijabwms.com',
+                email: 'operator@hijab.com',
                 passwordHash: hashedPassword,
                 role: 'OPERATOR',
                 phone: '+62812345679',
