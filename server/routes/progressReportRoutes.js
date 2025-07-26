@@ -4,7 +4,7 @@ const {
   getProgressReports,
   createProgressReport,
   getProgressPhotos
-} = require('../controllers/progressReportController');
+} = require('../controllers/productionProgressController');
 
 const router = express.Router();
 

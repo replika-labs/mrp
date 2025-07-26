@@ -9,7 +9,7 @@ const {
   getOrderLinkStatus,
   updateOrderLink,
   deleteOrderLink
-} = require('../controllers/orderLinkController');
+} = require('../controllers/productionURLController');
 
 const router = express.Router();
 

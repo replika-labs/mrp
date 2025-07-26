@@ -12,7 +12,7 @@ const {
   getPurchaseLogsBySupplier,
   getPurchaseLogsByDateRange,
   getPurchaseLogAnalytics
-} = require('../controllers/purchaseLogController');
+} = require('../controllers/fabricAcquisitionController');
 
 // Authentication middleware will be applied when implementing
 // router.use(protect);

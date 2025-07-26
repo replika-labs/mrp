@@ -16,7 +16,7 @@ const {
   bulkDeactivateProducts,
   checkProductDeletable,
   checkBulkDeleteProducts
-} = require('../controllers/productController');
+} = require('../controllers/garmentController');
 
 const {
   completeOrderStock,
@@ -24,7 +24,7 @@ const {
   setProductStock,
   getProductStockMovements,
   bulkCompleteOrdersStock
-} = require('../controllers/productStockController');
+} = require('../controllers/garmentStockController');
 
 const {
   getProductColours,
@@ -32,14 +32,14 @@ const {
   createProductColour,
   updateProductColour,
   deleteProductColour
-} = require('../controllers/productColourController');
+} = require('../controllers/colorVariantController');
 const {
   getProductVariations: getIndividualProductVariations,
   getProductVariationById,
   createProductVariation,
   updateProductVariation,
   deleteProductVariation
-} = require('../controllers/productVariationController');
+} = require('../controllers/garmentVariantController');
 
 const router = express.Router();
 

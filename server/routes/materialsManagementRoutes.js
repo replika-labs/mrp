@@ -16,7 +16,7 @@ const {
   getStockMovements,
   updateStockLevel,
   adjustStock
-} = require('../controllers/materialsManagementController');
+} = require('../controllers/fabricManagementController');
 
 
 // Authentication middleware will be applied when implementing

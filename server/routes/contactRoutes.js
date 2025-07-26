@@ -10,7 +10,7 @@ const {
   getContactsByType,
   searchContacts,
   addContactNote
-} = require('../controllers/contactController');
+} = require('../controllers/partnerController');
 const { protect } = require('../middleware/authMiddleware');
 
 // All routes are protected

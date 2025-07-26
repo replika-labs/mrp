@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 // Import function to clear materials cache when products are created/updated
 let clearMaterialCaches = null;
 try {
-    const materialsController = require('./materialsManagementController');
+    const materialsController = require('./fabricManagementController');
     clearMaterialCaches = materialsController.clearMaterialCaches || (() => { });
 } catch (error) {
     clearMaterialCaches = () => { }; // Fallback if not available

@@ -11,8 +11,8 @@ const {
   updateOrder,
   deleteOrder,
   getOrderTimeline
-} = require('../controllers/ordersManagementController');
-const { generateOrderLink } = require('../controllers/orderLinkController')
+} = require('../controllers/productionManagementController');
+const { generateOrderLink } = require('../controllers/productionURLController')
 
 const router = express.Router();
 

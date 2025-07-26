@@ -1,5 +1,5 @@
 const express = require('express');
-const materialMovementController = require('../controllers/materialMovementController');
+const materialMovementController = require('../controllers/fabricFlowController');
 const router = express.Router();
 
 // Get all movements with filtering and pagination
