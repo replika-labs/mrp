@@ -691,8 +691,8 @@ function MaterialsManagementPage() {
       <div className="flex flex-col gap-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-800">Materials Management</h1>
-            <p className="mt-1 text-gray-600">Manage your materials inventory with enhanced tracking</p>
+            <h1 className="text-2xl font-semibold text-gray-800">Fabric Inventory</h1>
+            <p className="mt-1 text-gray-600">Track and manage your fabric stock with detailed attributes and automated updates.</p>
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -721,7 +721,7 @@ function MaterialsManagementPage() {
                 <FiPackage className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <div className="text-sm text-gray-600">Total Materials</div>
+                <div className="text-sm text-gray-600">Total Fabrics</div>
                 <div className="text-xl font-semibold mt-0.5">{materials.length}</div>
               </div>
             </div>
@@ -782,7 +782,7 @@ function MaterialsManagementPage() {
                 type="text"
                 value={filters.search}
                 onChange={(e) => handleFilterChange('search', e.target.value)}
-                placeholder="Search materials..."
+                placeholder="Search fabrics..."
                 className="w-full h-10 pl-9 pr-4 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
               />
             </div>
@@ -849,7 +849,7 @@ function MaterialsManagementPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-300 bg-gray-50">
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Material Info</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fabrics Info</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock Status</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Inventory</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>

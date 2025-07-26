@@ -81,7 +81,7 @@ export default function Navbar() {
 
                     {/* Logo */}
                     <Link href="/dashboard" className="flex items-center gap-2 text-xl font-bold text-primary">
-                        🏢 WMS
+                        Production Planning
                     </Link>
                 </div>
 

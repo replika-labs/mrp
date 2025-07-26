@@ -407,8 +407,8 @@ function ContactManagement() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Contact Management</h1>
-          <p className="text-gray-600">Manage suppliers, tailors, and internal contacts</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Partner Directory</h1>
+          <p className="text-gray-600">Manage external vendors, garment workers, and business contacts</p>
         </div>
 
         {/* Success/Error Messages */}

@@ -666,8 +666,8 @@ function PurchaseLogsPage() {
       <div className="mb-8">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Purchase Logs</h1>
-            <p className="text-gray-600">Track and manage all material purchase transactions</p>
+            <h1 className="text-2xl font-bold text-gray-900">Fabric Acquisition</h1>
+            <p className="text-gray-600">Track and manage all fabric and accessory purchase transactions.</p>
           </div>
           <button
             onClick={() => setShowCreateModal(true)}

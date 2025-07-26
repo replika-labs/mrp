@@ -131,7 +131,7 @@ export default function ReportsPage() {
                 <h1 className="text-2xl font-bold text-base-content leading-tight">
                   REPORTS
                 </h1>
-                <p className="text-sm text-base-content/60 leading-tight -mt-1">Generate and export reports for stock, production, and shipments</p>
+                <p className="text-sm text-base-content/60 leading-tight -mt-1">Generate and export reports for stock and production</p>
               </div>
             </div>
           </div>

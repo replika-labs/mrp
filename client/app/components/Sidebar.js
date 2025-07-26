@@ -11,14 +11,14 @@ export default function Sidebar({ menuItems }) {
         <div className="w-72 h-screen bg-base-100 border-r border-gray-300 flex flex-col shadow-lg">
             {/* Logo Section */}
             <div className="flex items-center gap-3 p-6 border-b border-gray-300 flex-shrink-0">
-                <div className="avatar">
+                {/* <div className="avatar">
                     <div className="w-8 rounded-lg">
                         <img src="/logo.png" alt="WMS Logo" className="w-8 h-8 object-contain" />
                     </div>
-                </div>
+                </div> */}
                 <div className="flex flex-col">
-                    <span className="font-bold text-lg text-primary">WMS</span>
-                    <span className="text-xs text-base-content/60">Warehouse Management</span>
+                    <span className="font-bold text-lg text-primary">Roselover</span>
+                    <span className="text-xs text-base-content/60">Hijab Garment Production</span>
                 </div>
             </div>
 
@@ -67,11 +67,11 @@ export default function Sidebar({ menuItems }) {
             {/* Footer */}
             <div className="p-4 border-t border-gray-300 flex-shrink-0">
                 <div className="text-center">
-                    <div className="text-xs text-base-content/50">
-                        © 2024 WMS v2.0
-                    </div>
                     <div className="text-xs text-base-content/40 mt-1">
-                        Warehouse Management System
+                        Garment Production Planning
+                    </div>
+                    <div className="text-xs text-base-content/50">
+                        © 2024 
                     </div>
                 </div>
             </div>

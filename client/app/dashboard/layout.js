@@ -29,19 +29,19 @@ const menuItems = [
         category: 'Inventory',
         items: [
             {
-                label: 'Materials',
+                label: 'Fabrics',
                 href: '/dashboard/materials',
                 icon: Package,
                 adminOnly: false
             },
             {
-                label: 'Products',
+                label: 'Garments',
                 href: '/dashboard/products',
                 icon: Shirt,
                 adminOnly: false
             },
             {
-                label: 'Material Movement',
+                label: 'Fabric Flow',
                 href: '/dashboard/material-movement',
                 icon: ArrowRightLeft,
                 adminOnly: true
@@ -52,13 +52,13 @@ const menuItems = [
         category: 'Operations',
         items: [
             {
-                label: 'Purchase Logs',
+                label: 'Fabric Acquisition',
                 href: '/dashboard/purchase-logs',
                 icon: ShoppingCart,
                 adminOnly: false
             },
             {
-                label: 'Orders Management',
+                label: 'Production Orders',
                 href: '/dashboard/orders-management',
                 icon: Target,
                 adminOnly: false
@@ -69,7 +69,7 @@ const menuItems = [
         category: 'Relationships',
         items: [
             {
-                label: 'Contacts',
+                label: 'Partners',
                 href: '/dashboard/contacts',
                 icon: Users,
                 adminOnly: false

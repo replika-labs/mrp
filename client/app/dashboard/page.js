@@ -277,7 +277,7 @@ export default function DashboardPage() {
                 Welcome back, {user?.name || 'Hijab Store Administrator'}! 👋
           </h1>
               <p className="text-xs lg:text-sm text-base-content/50 leading-relaxed max-w-2xl">
-                Here&apos;s what&apos;s happening with your warehouse today. Monitor your operations and stay on top of your inventory.
+                Here&apos;s what&apos;s happening with your garment today. Monitor your operations and stay on top of your production.
           </p>
         </div>
             
@@ -394,7 +394,7 @@ export default function DashboardPage() {
               <div className="ml-3 w-2 h-2 bg-primary rounded-full animate-pulse"></div>
             </h3>
             <Link
-              href="/dashboard/activity"
+              href="#"
               className="btn bg-base-200 hover:bg-base-300 border border-gray-300 hover:border-gray-400 rounded-lg px-3 py-1 hover:scale-105 transition-all duration-300 shadow-md hover:shadow-lg text-base-content font-medium text-xs flex items-center gap-1 h-7"
             >
               <span>View All</span>

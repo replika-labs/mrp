@@ -385,7 +385,7 @@ export default function MaterialMovementPage() {
                 <h1 className="text-2xl font-bold text-base-content bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent leading-tight">
                   Material Movement
                 </h1>
-                <p className="text-sm text-base-content/60 leading-tight -mt-5">Manage material inflow and outflow with purchase integration</p>
+                <p className="text-sm text-base-content/60 leading-tight -mt-5">Monitor inbound and outbound fabric movement with purchase integration</p>
               </div>
             </div>
             {/* <div className="flex space-x-3">
@@ -457,7 +457,7 @@ export default function MaterialMovementPage() {
             <div className="bg-white shadow sm:rounded-lg mb-6">
               <div className="px-4 py-5 sm:p-6">
                 <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-                  Movement Analytics
+                  Flow Analytics
                 </h3>
                 <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                   <div className="bg-white border border-gray-200 overflow-hidden shadow rounded-lg">
@@ -471,7 +471,7 @@ export default function MaterialMovementPage() {
                         <div className="ml-5 w-0 flex-1">
                           <dl>
                             <dt className="text-sm font-medium text-gray-600 truncate">
-                              Total Movements
+                              Total Flows
                             </dt>
                             <dd className="text-lg font-bold text-gray-900">
                               {analytics.totalMovements || 0}
@@ -613,7 +613,7 @@ export default function MaterialMovementPage() {
                     value={filter.search}
                     onChange={handleFilterChange}
                   className="w-full h-8 px-3 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-gray-50 transition-all duration-200"
-                    placeholder="Search by notes, material name, or code"
+                    placeholder="Search by notes, fabric name, or code"
                   />
                 </div>
               </div>
@@ -641,7 +641,7 @@ export default function MaterialMovementPage() {
                   <FiPackage className="w-5 h-5 text-primary" />
                 </div>
                 <h3 className="text-lg font-semibold text-base-content">
-                Material Movements ({pagination.total || 0} total)
+                Fabric Flow ({pagination.total || 0} total)
               </h3>
               </div>
             </div>
@@ -665,7 +665,7 @@ export default function MaterialMovementPage() {
                           Type
                         </th>
                         <th className="text-left py-4 px-6 font-semibold text-base-content/80 w-1/4">
-                          Material
+                          Fabric
                         </th>
                         <th className="text-left py-4 px-6 font-semibold text-base-content/80 w-1/8">
                           Quantity
