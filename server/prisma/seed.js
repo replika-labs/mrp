@@ -659,61 +659,427 @@ async function main() {
 
         console.log('✓ Hijab-related contacts created')
 
-        // Create hijab-specific inventory items only
-        const inventarisItems = [
+        // Create sample orders with different statuses for realistic business scenario
+        const sampleOrders = [
             {
-                name: 'Hijab Sewing Machines',
-                quantity: 5,
-                unit: 'units',
-                notes: 'Specialized sewing machines for hijab production'
+                orderNumber: 'ORD-000001',
+                status: 'CREATED',
+                targetPcs: 50,
+                completedPcs: 0,
+                customerNote: 'Premium chiffon hijabs for Ramadan collection - high quality required',
+                dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 2 weeks from now
+                description: 'Special order for Ramadan collection with premium chiffon fabric',
+                priority: 'HIGH',
+                userId: adminUser.id,
+                workerContactId: null
             },
             {
-                name: 'Hijab Cutting Tables',
-                quantity: 3,
-                unit: 'units',
-                notes: 'Large cutting tables for hijab fabric preparation'
+                orderNumber: 'ORD-000002',
+                status: 'PROCESSING',
+                targetPcs: 100,
+                completedPcs: 60,
+                customerNote: 'Daily voile hijabs - standard quality for regular customers',
+                dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 1 week from now
+                description: 'Regular production order for daily wear hijabs',
+                priority: 'MEDIUM',
+                userId: adminUser.id,
+                workerContactId: null
             },
             {
-                name: 'Hijab Measuring Tools',
-                quantity: 20,
-                unit: 'sets',
-                notes: 'Rulers, measuring tapes, and cutting tools for hijab sizing'
+                orderNumber: 'ORD-000003',
+                status: 'COMPLETED',
+                targetPcs: 30,
+                completedPcs: 30,
+                customerNote: 'Luxury silk hijabs for special event - premium finish required',
+                dueDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+                description: 'Completed luxury order for special event',
+                priority: 'URGENT',
+                userId: adminUser.id,
+                workerContactId: null
             },
             {
-                name: 'Hijab Packaging Materials',
-                quantity: 500,
-                unit: 'pcs',
-                notes: 'Branded boxes, bags, and labels for hijab packaging'
+                orderNumber: 'ORD-000004',
+                status: 'CONFIRMED',
+                targetPcs: 75,
+                completedPcs: 0,
+                customerNote: 'Mixed hijab styles for boutique - various colors needed',
+                dueDate: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000), // 3 weeks from now
+                description: 'Boutique order with mixed product types',
+                priority: 'MEDIUM',
+                userId: adminUser.id,
+                workerContactId: null
             },
             {
-                name: 'Hijab Display Mannequins',
-                quantity: 15,
-                unit: 'pcs',
-                notes: 'Head mannequins specifically for hijab display'
-            },
-            {
-                name: 'Hijab Storage Boxes',
-                quantity: 100,
-                unit: 'pcs',
-                notes: 'Organized storage boxes for hijab inventory management'
+                orderNumber: 'ORD-000005',
+                status: 'NEED_MATERIAL',
+                targetPcs: 40,
+                completedPcs: 0,
+                customerNote: 'Cotton inner hijabs - waiting for material delivery',
+                dueDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000), // 10 days from now
+                description: 'On hold - waiting for cotton material delivery',
+                priority: 'LOW',
+                userId: adminUser.id,
+                workerContactId: null
             }
         ]
 
-        for (const item of inventarisItems) {
-            const existingItem = await prisma.inventaris.findFirst({
-                where: { name: item.name }
+        const createdOrders = []
+        for (const orderData of sampleOrders) {
+            const existingOrder = await prisma.order.findFirst({
+                where: { orderNumber: orderData.orderNumber }
             })
 
-            if (!existingItem) {
-                await prisma.inventaris.create({
-                    data: item
+            if (!existingOrder) {
+                const order = await prisma.order.create({
+                    data: orderData
+                })
+                createdOrders.push(order)
+            } else {
+                createdOrders.push(existingOrder)
+            }
+        }
+
+        console.log('✓ Sample orders created with different statuses')
+
+        // Create order products linking existing products to orders
+        const orderProductsData = [
+            // Order 1 (ORD-000001) - Premium Ramadan collection
+            { orderId: createdOrders[0].id, productId: 1, quantity: 25, unitPrice: 125000, notes: 'Premium chiffon - main collection' },
+            { orderId: createdOrders[0].id, productId: 4, quantity: 25, unitPrice: 250000, notes: 'Luxury silk - special pieces' },
+            
+            // Order 2 (ORD-000002) - Daily hijabs (in progress)
+            { orderId: createdOrders[1].id, productId: 2, quantity: 60, unitPrice: 85000, completedQty: 40, notes: 'Daily voile - regular production' },
+            { orderId: createdOrders[1].id, productId: 3, quantity: 40, unitPrice: 45000, completedQty: 20, notes: 'Cotton inner - basic quality' },
+            
+            // Order 3 (ORD-000003) - Completed luxury order
+            { orderId: createdOrders[2].id, productId: 4, quantity: 30, unitPrice: 250000, completedQty: 30, status: 'COMPLETED', notes: 'Luxury silk - completed successfully' },
+            
+            // Order 4 (ORD-000004) - Boutique mixed order
+            { orderId: createdOrders[3].id, productId: 1, quantity: 25, unitPrice: 125000, notes: 'Premium chiffon for boutique' },
+            { orderId: createdOrders[3].id, productId: 2, quantity: 25, unitPrice: 85000, notes: 'Daily voile for boutique' },
+            { orderId: createdOrders[3].id, productId: 5, quantity: 25, unitPrice: 95000, notes: 'Square chiffon for boutique' },
+            
+            // Order 5 (ORD-000005) - Cotton order waiting for material
+            { orderId: createdOrders[4].id, productId: 3, quantity: 40, unitPrice: 45000, notes: 'Cotton inner - waiting for material' }
+        ]
+
+        for (const opData of orderProductsData) {
+            const existingOrderProduct = await prisma.orderProduct.findFirst({
+                where: {
+                    orderId: opData.orderId,
+                    productId: opData.productId
+                }
+            })
+
+            if (!existingOrderProduct) {
+                const totalPrice = (opData.unitPrice || 0) * (opData.quantity || 1)
+                await prisma.orderProduct.create({
+                    data: {
+                        ...opData,
+                        totalPrice,
+                        status: opData.status || 'PENDING'
+                    }
                 })
             }
         }
 
-        console.log('✓ Hijab-specific inventory items created')
+        console.log('✓ Order products created linking products to orders')
 
-        console.log('Hijab WMS database seeding completed successfully!')
+        // Create order tracking links
+        const orderLinksData = [
+            {
+                orderId: createdOrders[0].id,
+                userId: adminUser.id,
+                linkToken: `track_${createdOrders[0].orderNumber}_${Date.now()}`,
+                isActive: true,
+                expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
+            },
+            {
+                orderId: createdOrders[1].id,
+                userId: adminUser.id,
+                linkToken: `track_${createdOrders[1].orderNumber}_${Date.now() + 1}`,
+                isActive: true,
+                expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+            },
+            {
+                orderId: createdOrders[2].id,
+                userId: adminUser.id,
+                linkToken: `track_${createdOrders[2].orderNumber}_${Date.now() + 2}`,
+                isActive: false, // Disabled since order is completed
+                expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+            }
+        ]
+
+        for (const linkData of orderLinksData) {
+            const existingLink = await prisma.orderLink.findFirst({
+                where: { orderId: linkData.orderId }
+            })
+
+            if (!existingLink) {
+                await prisma.orderLink.create({
+                    data: linkData
+                })
+            }
+        }
+
+        console.log('✓ Order tracking links created')
+
+        // Create progress reports for orders
+        const progressReportsData = [
+            // Progress for Order 2 (processing order)
+            {
+                orderId: createdOrders[1].id,
+                userId: adminUser.id,
+                reportText: 'Started production - completed 30 pieces of daily voile hijabs. Quality is good, on schedule.',
+                percentage: 30,
+                createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) // 3 days ago
+            },
+            {
+                orderId: createdOrders[1].id,
+                userId: adminUser.id,
+                reportText: 'Good progress - completed additional 30 pieces (total 60/100). Started cotton inner hijabs.',
+                percentage: 60,
+                createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000) // 1 day ago
+            },
+            // Progress for completed Order 3
+            {
+                orderId: createdOrders[2].id,
+                userId: adminUser.id,
+                reportText: 'Started luxury silk hijab production - 15 pieces completed with premium finish.',
+                percentage: 50,
+                createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000) // 5 days ago
+            },
+            {
+                orderId: createdOrders[2].id,
+                userId: adminUser.id,
+                reportText: 'Completed all 30 luxury silk hijabs. Quality inspection passed. Ready for delivery.',
+                percentage: 100,
+                createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) // 2 days ago
+            }
+        ]
+
+        for (const reportData of progressReportsData) {
+            const existingReport = await prisma.progressReport.findFirst({
+                where: {
+                    orderId: reportData.orderId,
+                    reportText: reportData.reportText
+                }
+            })
+
+            if (!existingReport) {
+                await prisma.progressReport.create({
+                    data: reportData
+                })
+            }
+        }
+
+        console.log('✓ Progress reports created for order tracking')
+
+        // Create contact notes for business communications
+        const contactNotesData = [
+            {
+                contactId: 1, // Siti Aminah (worker)
+                orderId: createdOrders[1].id,
+                createdBy: adminUser.id,
+                noteType: 'GENERAL',
+                subject: 'Progress Update Meeting',
+                content: 'Met with Siti to discuss Order ORD-000002 progress. She confirmed 60 pieces completed and expects to finish remaining 40 pieces by next week. Quality is excellent.',
+                isImportant: false,
+                createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
+            },
+            {
+                contactId: 2, // Premium Textile Indonesia (supplier)
+                createdBy: adminUser.id,
+                noteType: 'PURCHASE',
+                subject: 'Bulk Fabric Order Discussion',
+                content: 'Negotiated pricing for next month chiffon fabric order. Secured 5% bulk discount for orders above 200 meters. Delivery scheduled for next Friday.',
+                isImportant: true,
+                createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
+            },
+            {
+                contactId: 5, // Hijab Boutique Jakarta (customer)
+                orderId: createdOrders[3].id,
+                createdBy: adminUser.id,
+                noteType: 'ORDER',
+                subject: 'Special Requirements Discussion',
+                content: 'Customer requested specific color combinations for boutique order. Confirmed: 10 pieces in dusty pink, 10 in sage green, 5 in navy blue for each product type.',
+                isImportant: true,
+                createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
+            },
+            {
+                contactId: 7, // Fatimah Zahra (designer)
+                createdBy: adminUser.id,
+                noteType: 'GENERAL',
+                subject: 'New Design Ideas',
+                content: 'Fatimah presented new embroidered edge designs for premium collection. Samples look promising for next season launch.',
+                isImportant: false,
+                createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000)
+            }
+        ]
+
+        for (const noteData of contactNotesData) {
+            const existingNote = await prisma.contactNote.findFirst({
+                where: {
+                    contactId: noteData.contactId,
+                    subject: noteData.subject
+                }
+            })
+
+            if (!existingNote) {
+                await prisma.contactNote.create({
+                    data: noteData
+                })
+            }
+        }
+
+        console.log('✓ Contact notes created for business communications')
+
+        // Create product photos for catalog
+        const productPhotosData = [
+            // Premium Chiffon Hijab photos
+            {
+                productId: 1,
+                photoPath: '/uploads/products/premium-chiffon-main.jpg',
+                thumbnailPath: '/uploads/products/thumbnails/premium-chiffon-main_thumb.jpg',
+                description: 'Premium Chiffon Hijab - Main Product View',
+                isPrimary: true,
+                sortOrder: 0,
+                fileSize: 2048576, // 2MB
+                mimeType: 'image/jpeg'
+            },
+            {
+                productId: 1,
+                photoPath: '/uploads/products/premium-chiffon-detail.jpg',
+                thumbnailPath: '/uploads/products/thumbnails/premium-chiffon-detail_thumb.jpg',
+                description: 'Premium Chiffon Hijab - Fabric Detail',
+                isPrimary: false,
+                sortOrder: 1,
+                fileSize: 1536576, // 1.5MB
+                mimeType: 'image/jpeg'
+            },
+            // Daily Voile Hijab photos
+            {
+                productId: 2,
+                photoPath: '/uploads/products/daily-voile-main.jpg',
+                thumbnailPath: '/uploads/products/thumbnails/daily-voile-main_thumb.jpg',
+                description: 'Daily Voile Hijab - Main Product View',
+                isPrimary: true,
+                sortOrder: 0,
+                fileSize: 1892576, // 1.8MB
+                mimeType: 'image/jpeg'
+            },
+            // Cotton Inner Hijab photos
+            {
+                productId: 3,
+                photoPath: '/uploads/products/cotton-inner-main.jpg',
+                thumbnailPath: '/uploads/products/thumbnails/cotton-inner-main_thumb.jpg',
+                description: 'Cotton Inner Hijab - Comfort View',
+                isPrimary: true,
+                sortOrder: 0,
+                fileSize: 1345576, // 1.3MB
+                mimeType: 'image/jpeg'
+            },
+            // Luxury Silk Hijab photos
+            {
+                productId: 4,
+                photoPath: '/uploads/products/luxury-silk-main.jpg',
+                thumbnailPath: '/uploads/products/thumbnails/luxury-silk-main_thumb.jpg',
+                description: 'Luxury Silk Hijab - Premium View',
+                isPrimary: true,
+                sortOrder: 0,
+                fileSize: 2456576, // 2.4MB
+                mimeType: 'image/jpeg'
+            },
+            {
+                productId: 4,
+                photoPath: '/uploads/products/luxury-silk-texture.jpg',
+                thumbnailPath: '/uploads/products/thumbnails/luxury-silk-texture_thumb.jpg',
+                description: 'Luxury Silk Hijab - Texture Close-up',
+                isPrimary: false,
+                sortOrder: 1,
+                fileSize: 1987576, // 1.9MB
+                mimeType: 'image/jpeg'
+            }
+        ]
+
+        for (const photoData of productPhotosData) {
+            const existingPhoto = await prisma.productPhoto.findFirst({
+                where: {
+                    productId: photoData.productId,
+                    photoPath: photoData.photoPath
+                }
+            })
+
+            if (!existingPhoto) {
+                await prisma.productPhoto.create({
+                    data: photoData
+                })
+            }
+        }
+
+        console.log('✓ Product photos added to catalog')
+
+        // Create remaining materials for waste tracking
+        const remainingMaterialsData = [
+            {
+                materialId: chiffonFabric?.id,
+                quantity: 2.5,
+                unit: 'meter',
+                notes: 'Leftover from Order ORD-000003 - high quality remnants, perfect for samples or small accessories'
+            },
+            {
+                materialId: voileFabric?.id,
+                quantity: 1.8,
+                unit: 'meter',
+                notes: 'Small pieces from cutting process - suitable for inner hijab patches or product samples'
+            },
+            {
+                materialId: cottonJersey?.id,
+                quantity: 3.2,
+                unit: 'meter',
+                notes: 'Good quality leftover cotton - can be used for next cotton inner hijab order'
+            },
+            {
+                materialId: silkSatin?.id,
+                quantity: 0.7,
+                unit: 'meter',
+                notes: 'Premium silk remnant - save for luxury accessories or special custom orders'
+            }
+        ]
+
+        for (const materialData of remainingMaterialsData) {
+            if (materialData.materialId) {
+                const existingMaterial = await prisma.remainingMaterial.findFirst({
+                    where: {
+                        materialId: materialData.materialId,
+                        notes: materialData.notes
+                    }
+                })
+
+                if (!existingMaterial) {
+                    await prisma.remainingMaterial.create({
+                        data: materialData
+                    })
+                }
+            }
+        }
+
+        console.log('✓ Remaining materials added for waste tracking')
+
+        console.log('')
+        console.log('🎉 COMPREHENSIVE HIJAB WMS DATABASE SEEDING COMPLETED! 🎉')
+        console.log('')
+        console.log('📊 Business Data Summary:')
+        console.log('   • 5 Sample orders with different statuses (CREATED, PROCESSING, COMPLETED, etc.)')
+        console.log('   • 9 Order-product relationships with realistic quantities')
+        console.log('   • 3 Order tracking links for customer access')
+        console.log('   • 4 Progress reports showing production tracking')
+        console.log('   • 4 Contact notes for business communications')
+        console.log('   • 6 Product photos for catalog display')
+        console.log('   • 4 Remaining material records for waste tracking')
+        console.log('')
+        console.log('🚀 Your dashboard should now show populated data for all models!')
+        console.log('💼 Ready for full WMS demonstration and testing!')
 
     } catch (error) {
         console.error('Error during seeding:', error)

@@ -156,10 +156,7 @@ app.get('/api/dashboard/debug', protect, adminOnly, asyncHandler(async (req, res
       prisma.user.count().then(count => ({ name: 'User', count })),
       prisma.progressReport.count().then(count => ({ name: 'ProgressReport', count })),
       prisma.materialMovement.count().then(count => ({ name: 'MaterialMovement', count })),
-      prisma.statusChange.count().then(count => ({ name: 'StatusChange', count })),
-      prisma.materialType.count().then(count => ({ name: 'MaterialType', count })),
       prisma.contact.count().then(count => ({ name: 'Contact', count })),
-      prisma.inventaris.count().then(count => ({ name: 'Inventaris', count })),
     ]);
 
     res.json({
