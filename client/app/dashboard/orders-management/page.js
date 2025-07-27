@@ -6,7 +6,7 @@ import DashboardLayout from '@/app/components/DashboardLayout';
 import AuthWrapper from '@/app/components/AuthWrapper';
 import ProductSelector from '@/app/components/ProductSelector';
 import ordersManagementAPI from '@/app/services/OrdersManagementAPI';
-import { FiClipboard, FiClock, FiCheck, FiAlertTriangle, FiPlus, FiX, FiSearch } from 'react-icons/fi';
+import { FiClipboard, FiClock, FiCheck, FiAlertTriangle, FiPlus, FiX, FiSearch, FiDownload } from 'react-icons/fi';
 
 export default function OrdersManagement() {
   const router = useRouter();
@@ -315,6 +315,63 @@ export default function OrdersManagement() {
     } catch (err) {
       setError('Failed to generate order link: ' + err.message);
       setTimeout(() => setError(''), 5000);
+    }
+  };
+
+  const handleDownloadReport = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Authentication token required');
+      }
+
+      // Send current filters to API
+      const params = {
+        status: filters.status,
+        priority: filters.priority,
+        search: filters.search,
+        dateFrom: filters.dateFrom,
+        dateTo: filters.dateTo,
+        sortBy: filters.sortBy,
+        sortOrder: filters.sortOrder
+      };
+
+      const response = await fetch('http://localhost:8080/api/orders-management/download-report', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(params)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to download report');
+      }
+
+      // Handle PDF download
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `orders-report-${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      setSuccess('Report downloaded successfully!');
+      setTimeout(() => setSuccess(''), 3000);
+
+    } catch (err) {
+      setError('Failed to download report: ' + err.message);
+      setTimeout(() => setError(''), 5000);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -709,6 +766,14 @@ export default function OrdersManagement() {
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-3">
+              <button
+                onClick={handleDownloadReport}
+                disabled={loading}
+                className="btn bg-secondary text-secondary-content border border-gray-300 h-10 px-4 text-sm shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <FiDownload className="w-4 h-4" />
+                <span className="normal-case">Download Report</span>
+              </button>
                 <button
                   onClick={() => router.push('/dashboard/orders-management/create')}
                 className="btn bg-primary text-primary-content border border-gray-300 h-10 px-4 text-sm shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 rounded-lg flex items-center justify-center gap-2"

@@ -1,5 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const { PrismaClient } = require('@prisma/client');
+const PDFDocument = require('pdfkit');
 // const MaterialStockChecker = require('../services/MaterialStockChecker'); // Commented out until service is updated
 
 const prisma = new PrismaClient();
@@ -888,6 +889,225 @@ const getOrderTimeline = asyncHandler(async (req, res) => {
   }
 });
 
+/**
+ * Download orders report as PDF
+ * Download ALL filtered results, not paginated
+ */
+const downloadOrdersReport = asyncHandler(async (req, res) => {
+  try {
+    const {
+      status,
+      priority,
+      search,
+      dateFrom,
+      dateTo,
+      sortBy = 'createdAt',
+      sortOrder = 'desc'
+    } = req.body || req.query;
+
+    // Build where clause - same as getOrdersList but NO pagination
+    const where = { isActive: true };
+
+    if (status && status !== 'all' && status !== '') {
+      where.status = status;
+    }
+
+    if (priority && priority !== 'all' && priority !== '') {
+      where.priority = priority;
+    }
+
+    if (search) {
+      where.OR = [
+        { orderNumber: { contains: search, mode: 'insensitive' } },
+        { customerNote: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } }
+      ];
+    }
+
+    if (dateFrom || dateTo) {
+      where.createdAt = {};
+      if (dateFrom) where.createdAt.gte = new Date(dateFrom);
+      if (dateTo) where.createdAt.lte = new Date(dateTo + 'T23:59:59.999Z');
+    }
+
+    // Get ALL orders (no pagination) and flatten order-product combinations
+    const orders = await prisma.order.findMany({
+      where,
+      include: {
+        workerContact: {
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+            whatsappPhone: true,
+            email: true,
+            company: true
+          }
+        },
+        orderProducts: {
+          include: {
+            product: {
+              select: {
+                id: true,
+                name: true,
+                code: true,
+                unit: true,
+                price: true,
+                category: true
+              }
+            }
+          }
+        }
+      },
+      orderBy: { [sortBy]: sortOrder.toLowerCase() }
+    });
+
+    // Flatten data - one row per order-product combination
+    const reportData = [];
+    orders.forEach(order => {
+      if (order.orderProducts && order.orderProducts.length > 0) {
+        order.orderProducts.forEach(op => {
+          reportData.push({
+            orderNumber: order.orderNumber,
+            productName: op.product.name,
+            productCode: op.product.code,
+            quantity: op.quantity,
+            completedQty: op.completedQty || 0,
+            orderStatus: order.status,
+            priority: order.priority,
+            tailorName: order.workerContact?.name || 'Not Assigned',
+            dueDate: order.dueDate ? new Date(order.dueDate).toLocaleDateString() : 'No due date',
+            customerNote: order.customerNote || '',
+            createdAt: new Date(order.createdAt).toLocaleDateString()
+          });
+        });
+      } else {
+        // Orders without products
+        reportData.push({
+          orderNumber: order.orderNumber,
+          productName: 'No Products',
+          productCode: 'N/A',
+          quantity: 0,
+          completedQty: 0,
+          orderStatus: order.status,
+          priority: order.priority,
+          tailorName: order.workerContact?.name || 'Not Assigned',
+          dueDate: order.dueDate ? new Date(order.dueDate).toLocaleDateString() : 'No due date',
+          customerNote: order.customerNote || '',
+          createdAt: new Date(order.createdAt).toLocaleDateString()
+        });
+      }
+    });
+
+    // Create PDF document in landscape
+    const doc = new PDFDocument({ 
+      layout: 'landscape',
+      margin: 30,
+      size: 'A4'
+    });
+    
+    const chunks = [];
+    doc.on('data', (chunk) => chunks.push(chunk));
+    doc.on('end', () => {
+      const pdfData = Buffer.concat(chunks);
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename=orders-report-${new Date().toISOString().split('T')[0]}.pdf`);
+      res.send(pdfData);
+    });
+
+    // Header
+    doc.fontSize(20).text('Roselover Hijab', 50, 40);
+    doc.fontSize(12).text(`Generated: ${new Date().toLocaleString()}`, 650, 45, { align: 'right' });
+
+    // Mini Summary
+    const totalOrders = orders.length;
+    const totalProducts = reportData.length;
+    const totalQuantity = reportData.reduce((sum, row) => sum + row.quantity, 0);
+    const totalCompleted = reportData.reduce((sum, row) => sum + row.completedQty, 0);
+    
+    doc.fontSize(14).text('ORDERS REPORT SUMMARY', 50, 80, { underline: true });
+    doc.fontSize(10)
+      .text(`Total Orders: ${totalOrders}`, 50, 100)
+      .text(`Total Products: ${totalProducts}`, 200, 100)
+      .text(`Total Quantity: ${totalQuantity} pcs`, 350, 100)
+      .text(`Total Completed: ${totalCompleted} pcs`, 500, 100);
+
+    // Applied Filters
+    let filterText = 'Filters: ';
+    filterText += status ? `Status=${status} ` : 'All Status ';
+    filterText += priority ? `Priority=${priority} ` : 'All Priority ';
+    filterText += search ? `Search="${search}" ` : '';
+    filterText += dateFrom ? `From=${dateFrom} ` : '';
+    filterText += dateTo ? `To=${dateTo}` : '';
+    
+    doc.fontSize(9).text(filterText, 50, 120);
+
+    // Table Header
+    let yPosition = 150;
+    const rowHeight = 20;
+    const colWidths = [90, 140, 70, 60, 80, 80, 90];
+    let xPosition = 50;
+
+    // Table headers
+    doc.fontSize(8).fillColor('black');
+    const headers = ['Order #', 'Product Name', 'Qty', 'Done', 'Status', 'Priority', 'Due Date'];
+    
+    headers.forEach((header, i) => {
+      doc.rect(xPosition, yPosition, colWidths[i], rowHeight).stroke();
+      doc.text(header, xPosition + 5, yPosition + 6, { width: colWidths[i] - 10, align: 'center' });
+      xPosition += colWidths[i];
+    });
+
+    yPosition += rowHeight;
+
+    // Table Data
+    reportData.forEach((row, index) => {
+      if (yPosition > 500) { // New page if needed
+        doc.addPage();
+        yPosition = 50;
+      }
+
+      xPosition = 50;
+      const values = [
+        row.orderNumber,
+        row.productName.substring(0, 25), // More space for product names
+        row.quantity.toString(),
+        row.completedQty.toString(),
+        row.orderStatus,
+        row.priority,
+        row.dueDate
+      ];
+
+      values.forEach((value, i) => {
+        doc.rect(xPosition, yPosition, colWidths[i], rowHeight).stroke();
+        doc.fontSize(7).text(value, xPosition + 2, yPosition + 6, { 
+          width: colWidths[i] - 4, 
+          align: i === 2 || i === 3 ? 'center' : 'left' // Qty and Done columns centered
+        });
+        xPosition += colWidths[i];
+      });
+
+      yPosition += rowHeight;
+    });
+
+    // Footer
+    doc.fontSize(8).text(
+      `Report contains ${reportData.length} records | Generated on ${new Date().toLocaleString()}`, 
+      50, 
+      yPosition + 30
+    );
+
+    doc.end();
+
+  } catch (error) {
+    console.error('Error generating orders report:', error);
+    res.status(500).json({
+      message: 'Failed to generate orders report',
+      error: error.message
+    });
+  }
+});
+
 module.exports = {
   getOrdersList,
   getWorkers,
@@ -898,5 +1118,6 @@ module.exports = {
   createOrder,
   updateOrder,
   deleteOrder,
-  getOrderTimeline
+  getOrderTimeline,
+  downloadOrdersReport
 }; 

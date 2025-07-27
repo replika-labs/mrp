@@ -11,7 +11,8 @@ const {
   getPurchaseLogsByMaterial,
   getPurchaseLogsBySupplier,
   getPurchaseLogsByDateRange,
-  getPurchaseLogAnalytics
+  getPurchaseLogAnalytics,
+  downloadPurchaseLogsReport
 } = require('../controllers/fabricAcquisitionController');
 
 // Authentication middleware will be applied when implementing
@@ -34,5 +35,8 @@ router.get('/date-range', getPurchaseLogsByDateRange);
 
 // Analytics route
 router.get('/analytics', getPurchaseLogAnalytics);
+
+// Download report route
+router.post('/download-report', downloadPurchaseLogsReport);
 
 module.exports = router; 

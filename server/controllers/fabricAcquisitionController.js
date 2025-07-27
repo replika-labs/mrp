@@ -1,4 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
+const PDFDocument = require('pdfkit');
 const prisma = new PrismaClient();
 
 // Get all purchase logs with filtering and pagination
@@ -949,6 +950,217 @@ const getPurchaseLogAnalytics = async (req, res) => {
     }
 };
 
+/**
+ * Format currency to simple Indonesian format
+ * @param {number} amount - The amount to format
+ * @returns {string} - Formatted currency string
+ */
+const formatSimpleCurrency = (amount) => {
+    // Handle invalid or zero amounts
+    if (!amount || amount === 0 || isNaN(amount) || !isFinite(amount)) {
+        return 'Rp. 0';
+    }
+    
+    // Convert to number and get absolute value
+    const numAmount = Number(amount);
+    const absAmount = Math.abs(numAmount);
+    
+    // Handle very large numbers that might cause scientific notation
+    if (absAmount >= 1000000000000) {
+        // Trillions - too large, show in simplified format
+        const trillions = Math.floor(absAmount / 1000000000000);
+        return `Rp. ${trillions}T`;
+    } else if (absAmount >= 1000000000) {
+        // Billions (Milyar)
+        const billions = Math.floor(absAmount / 1000000000);
+        const remainder = Math.floor((absAmount % 1000000000) / 100000000);
+        if (remainder > 0) {
+            return `Rp. ${billions}.${remainder}M`;
+        }
+        return `Rp. ${billions}M`;
+    } else if (absAmount >= 1000000) {
+        // Millions (Juta)
+        const millions = Math.floor(absAmount / 1000000);
+        const remainder = Math.floor((absAmount % 1000000) / 100000);
+        if (remainder > 0) {
+            return `Rp. ${millions}.${remainder}jt`;
+        }
+        return `Rp. ${millions}jt`;
+    } else if (absAmount >= 1000) {
+        // Thousands (Ribu)
+        const thousands = Math.floor(absAmount / 1000);
+        return `Rp. ${thousands}rb`;
+    } else {
+        // Less than 1000
+        return `Rp. ${Math.floor(absAmount)}`;
+    }
+};
+
+/**
+ * Download purchase logs report as PDF
+ * Download ALL filtered results, not paginated
+ */
+const downloadPurchaseLogsReport = async (req, res) => {
+    try {
+        const {
+            status,
+            supplier,
+            materialId,
+            startDate,
+            endDate,
+            sortBy = 'purchaseDate',
+            sortOrder = 'desc'
+        } = req.body || req.query;
+
+        // Build where clause - same as getAllPurchaseLogs but NO pagination
+        const where = { isActive: true };
+
+        if (status && status !== 'all' && status !== '') {
+            where.status = status.toUpperCase();
+        }
+
+        if (supplier && supplier !== '') {
+            where.supplier = {
+                contains: supplier,
+                mode: 'insensitive'
+            };
+        }
+
+        if (materialId && materialId !== '' && materialId !== 'all') {
+            where.materialId = parseInt(materialId);
+        }
+
+        if (startDate || endDate) {
+            where.purchaseDate = {};
+            if (startDate) where.purchaseDate.gte = new Date(startDate);
+            if (endDate) where.purchaseDate.lte = new Date(endDate + 'T23:59:59.999Z');
+        }
+
+        // Get ALL purchase logs (no pagination)
+        const purchaseLogs = await prisma.purchaseLog.findMany({
+            where,
+            include: {
+                material: {
+                    select: {
+                        id: true,
+                        name: true,
+                        code: true,
+                        unit: true
+                    }
+                }
+            },
+            orderBy: { [sortBy]: sortOrder.toLowerCase() }
+        });
+
+        // Calculate summary data
+        const totalPurchases = purchaseLogs.length;
+        const totalValue = purchaseLogs.reduce((sum, log) => sum + (log.totalCost || 0), 0);
+        const receivedCount = purchaseLogs.filter(log => log.status === 'RECEIVED').length;
+        const pendingCount = purchaseLogs.filter(log => log.status === 'PENDING').length;
+        const cancelledCount = purchaseLogs.filter(log => log.status === 'CANCELLED').length;
+
+        // Create PDF document in landscape
+        const doc = new PDFDocument({ 
+            layout: 'landscape',
+            margin: 30,
+            size: 'A4'
+        });
+        
+        const chunks = [];
+        doc.on('data', (chunk) => chunks.push(chunk));
+        doc.on('end', () => {
+            const pdfData = Buffer.concat(chunks);
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', `attachment; filename=purchase-logs-report-${new Date().toISOString().split('T')[0]}.pdf`);
+            res.send(pdfData);
+        });
+
+        // Header
+        doc.fontSize(20).text('Roselover Hijab', 50, 40);
+        doc.fontSize(12).text(`Generated: ${new Date().toLocaleString()}`, 650, 45, { align: 'right' });
+
+        // Mini Summary - simplified
+        doc.fontSize(14).text('PURCHASE LOGS REPORT SUMMARY', 50, 80, { underline: true });
+        doc.fontSize(10)
+            .text(`Total Purchases: ${totalPurchases}`, 50, 100)
+            .text(`Status: ${receivedCount} Received, ${pendingCount} Pending, ${cancelledCount} Cancelled`, 250, 100);
+
+        // Applied Filters
+        let filterText = 'Filters: ';
+        filterText += status ? `Status=${status} ` : 'All Status ';
+        filterText += materialId ? `Material=ID${materialId} ` : 'All Materials ';
+        filterText += supplier ? `Supplier="${supplier}" ` : '';
+        filterText += startDate ? `From=${startDate} ` : '';
+        filterText += endDate ? `To=${endDate}` : '';
+        
+        doc.fontSize(9).text(filterText, 50, 120);
+
+        // Table Header
+        let yPosition = 150;
+        const rowHeight = 20;
+        const colWidths = [90, 140, 120, 90, 120, 80];
+        let xPosition = 50;
+
+        // Table headers
+        doc.fontSize(8).fillColor('black');
+        const headers = ['Date', 'Material', 'Supplier', 'Quantity', 'Total Cost', 'Status'];
+        
+        headers.forEach((header, i) => {
+            doc.rect(xPosition, yPosition, colWidths[i], rowHeight).stroke();
+            doc.text(header, xPosition + 5, yPosition + 6, { width: colWidths[i] - 10, align: 'center' });
+            xPosition += colWidths[i];
+        });
+
+        yPosition += rowHeight;
+
+        // Table Data
+        purchaseLogs.forEach((log, index) => {
+            if (yPosition > 500) { // New page if needed
+                doc.addPage();
+                yPosition = 50;
+            }
+
+            xPosition = 50;
+            const values = [
+                new Date(log.purchaseDate).toLocaleDateString(),
+                (log.material?.name || 'Unknown').substring(0, 20),
+                (log.supplier || 'No supplier').substring(0, 18),
+                `${log.quantity} ${log.unit}`,
+                formatSimpleCurrency(log.totalCost || 0),
+                log.status
+            ];
+
+            values.forEach((value, i) => {
+                doc.rect(xPosition, yPosition, colWidths[i], rowHeight).stroke();
+                doc.fontSize(7).text(value, xPosition + 2, yPosition + 6, { 
+                    width: colWidths[i] - 4, 
+                    align: i === 3 || i === 4 ? 'center' : 'left' 
+                });
+                xPosition += colWidths[i];
+            });
+
+            yPosition += rowHeight;
+        });
+
+        // Footer
+        doc.fontSize(8).text(
+            `Report contains ${purchaseLogs.length} records | Generated on ${new Date().toLocaleString()}`, 
+            50, 
+            yPosition + 30
+        );
+
+        doc.end();
+
+    } catch (error) {
+        console.error('❌ Error generating purchase logs report:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to generate purchase logs report',
+            error: error.message
+        });
+    }
+};
+
 module.exports = {
     getAllPurchaseLogs,
     getPurchaseLogById,
@@ -959,5 +1171,6 @@ module.exports = {
     getPurchaseLogsByMaterial,
     getPurchaseLogsBySupplier,
     getPurchaseLogsByDateRange,
-    getPurchaseLogAnalytics
+    getPurchaseLogAnalytics,
+    downloadPurchaseLogsReport
 }; 

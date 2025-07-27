@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FiPlus, FiSearch, FiFilter, FiEye, FiEdit2, FiTrash2, FiDollarSign, FiPackage, FiCalendar, FiTrendingUp, FiX } from 'react-icons/fi';
+import { FiPlus, FiSearch, FiFilter, FiEye, FiEdit2, FiTrash2, FiDollarSign, FiPackage, FiCalendar, FiTrendingUp, FiX, FiDownload } from 'react-icons/fi';
 import DashboardLayout from '@/app/components/DashboardLayout';
 import AuthWrapper from '@/app/components/AuthWrapper';
 import { formatCurrencyShort } from '@/utils/formatNominal';
@@ -645,6 +645,65 @@ function PurchaseLogsPage() {
     loadMaterials();
   }, []);
 
+  // Handle download report
+  const handleDownloadReport = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Authentication token required');
+      }
+
+      // Send current filters to API
+      const params = {
+        status: filters.status,
+        supplier: filters.supplier,
+        materialId: filters.materialId,
+        startDate: filters.startDate,
+        endDate: filters.endDate,
+        sortBy: filters.sortBy,
+        sortOrder: filters.sortOrder
+      };
+
+      const response = await fetch('http://localhost:8080/api/purchase-logs/download-report', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(params)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to download report');
+      }
+
+      // Handle PDF download
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `purchase-logs-report-${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      setSuccessMessage('Report downloaded successfully!');
+      setShowSuccessModal(true);
+      setTimeout(() => setShowSuccessModal(false), 3000);
+
+    } catch (err) {
+      setErrorMessage('Failed to download report: ' + err.message);
+      setShowErrorModal(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadSuppliers();
   }, []);
@@ -669,6 +728,15 @@ function PurchaseLogsPage() {
             <h1 className="text-2xl font-bold text-gray-900">Fabric Acquisition</h1>
             <p className="text-gray-600">Track and manage all fabric and accessory purchase transactions.</p>
           </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleDownloadReport}
+              disabled={loading}
+              className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <FiDownload size={20} />
+              Download Report
+            </button>
           <button
             onClick={() => setShowCreateModal(true)}
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
@@ -676,6 +744,7 @@ function PurchaseLogsPage() {
             <FiPlus size={20} />
             Add Purchase
           </button>
+          </div>
         </div>
 
         {/* Quick Stats */}

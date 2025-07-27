@@ -289,14 +289,14 @@ export default function DashboardPage() {
               >
                 <Plus className="w-4 h-4 flex-shrink-0" />
                 <span>Add Material</span>
-          </Link>
-              <Link 
+              </Link>
+              {/* <Link 
                 href="/dashboard/reports" 
                 className="btn bg-base-200 hover:bg-base-300 border border-gray-300 hover:border-gray-400 rounded-xl px-3 py-2 hover:scale-105 transition-all duration-300 shadow-md hover:shadow-lg text-base-content font-medium text-sm flex items-center justify-start gap-2 h-10"
               >
                 <Activity className="w-4 h-4 flex-shrink-0" />
                 <span>View Reports</span>
-          </Link>
+              </Link> */}
             </div>
           </div>
         </div>
@@ -327,7 +327,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
         <StatCard
           icon={Package}
-          label="Total Materials"
+          label="Total Fabrics"
           value={summaryData?.materialStats?.total || 8}
           trend={summaryData?.materialStats?.trend}
           href="/dashboard/materials"

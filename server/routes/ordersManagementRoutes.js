@@ -10,7 +10,8 @@ const {
   createOrder,
   updateOrder,
   deleteOrder,
-  getOrderTimeline
+  getOrderTimeline,
+  downloadOrdersReport
 } = require('../controllers/productionManagementController');
 const { generateOrderLink } = require('../controllers/productionURLController')
 
@@ -91,5 +92,12 @@ router.post('/cache/clear-workers', clearWorkersCache);
  * Generate a unique link for an order
  */
 router.post('/:id/generate-link', protect, generateOrderLink);
+
+/**
+ * POST /api/orders-management/download-report
+ * Download orders report as PDF with current filters applied
+ * Body: { status, priority, search, dateFrom, dateTo, sortBy, sortOrder }
+ */
+router.post('/download-report', protect, downloadOrdersReport);
 
 module.exports = router; 
