@@ -960,53 +960,6 @@ async function main() {
 
         console.log('✓ Product photos added to catalog')
 
-        // Create remaining materials for waste tracking
-        const remainingMaterialsData = [
-            {
-                materialId: chiffonFabric?.id,
-                quantity: 2.5,
-                unit: 'meter',
-                notes: 'Leftover from Order ORD-000003 - high quality remnants, perfect for samples or small accessories'
-            },
-            {
-                materialId: voileFabric?.id,
-                quantity: 1.8,
-                unit: 'meter',
-                notes: 'Small pieces from cutting process - suitable for inner hijab patches or product samples'
-            },
-            {
-                materialId: cottonJersey?.id,
-                quantity: 3.2,
-                unit: 'meter',
-                notes: 'Good quality leftover cotton - can be used for next cotton inner hijab order'
-            },
-            {
-                materialId: silkSatin?.id,
-                quantity: 0.7,
-                unit: 'meter',
-                notes: 'Premium silk remnant - save for luxury accessories or special custom orders'
-            }
-        ]
-
-        for (const materialData of remainingMaterialsData) {
-            if (materialData.materialId) {
-                const existingMaterial = await prisma.remainingMaterial.findFirst({
-                    where: {
-                        materialId: materialData.materialId,
-                        notes: materialData.notes
-                    }
-                })
-
-                if (!existingMaterial) {
-                    await prisma.remainingMaterial.create({
-                        data: materialData
-                    })
-                }
-            }
-        }
-
-        console.log('✓ Remaining materials added for waste tracking')
-
         console.log('')
         console.log('🎉 COMPREHENSIVE HIJAB WMS DATABASE SEEDING COMPLETED! 🎉')
         console.log('')

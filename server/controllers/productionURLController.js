@@ -874,97 +874,7 @@ const recordMaterialUsage = asyncHandler(async (req, res) => {
     }
 });
 
-/**
- * @desc    Submit remaining material report
- * @route   POST /api/order-links/:token/remaining-materials
- * @access  Public (via token)
- */
-const submitRemainingMaterials = asyncHandler(async (req, res) => {
-    try {
-        const { token } = req.params;
-        const { materialId, qtyRemaining, photoUrl, note } = req.body;
 
-        // Validate order link
-        const orderLink = await prisma.orderLink.findFirst({
-            where: {
-                linkToken: token,
-                isActive: true,
-                OR: [
-                    { expiresAt: null },
-                    { expiresAt: { gt: new Date() } }
-                ]
-            },
-            include: {
-                order: true,
-                user: true
-            }
-        });
-
-        if (!orderLink) {
-            return res.status(404).json({
-                success: false,
-                message: 'Order link not found or has expired'
-            });
-        }
-
-        // Validate that order is completed
-        if (orderLink.order.status !== 'COMPLETED') {
-            return res.status(400).json({
-                success: false,
-                message: 'Remaining materials can only be reported for completed orders'
-            });
-        }
-
-        // Validate material if provided
-        let material = null;
-        if (materialId) {
-            material = await prisma.material.findFirst({
-                where: { id: parseInt(materialId), isActive: true }
-            });
-
-            if (!material) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'Material not found'
-                });
-            }
-        }
-
-        // Create remaining material record
-        const remainingMaterial = await prisma.remainingMaterial.create({
-            data: {
-                materialId: material ? parseInt(materialId) : null,
-                quantity: parseFloat(qtyRemaining) || 0,
-                unit: material ? material.unit : 'pcs',
-                notes: note || `Remaining material from order ${orderLink.order.orderNumber}${photoUrl ? ` - Photo: ${photoUrl}` : ''}`
-            },
-            include: {
-                material: material ? {
-                    select: {
-                        id: true,
-                        name: true,
-                        code: true,
-                        unit: true
-                    }
-                } : undefined
-            }
-        });
-
-        res.status(201).json({
-            success: true,
-            message: 'Remaining material report submitted successfully',
-            remainingMaterial
-        });
-
-    } catch (error) {
-        console.error('Error submitting remaining materials:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to submit remaining material report',
-            error: error.message
-        });
-    }
-});
 
 /**
  * @desc    Get order link status
@@ -1166,7 +1076,6 @@ module.exports = {
     createOrderLink,
     submitProgress,
     recordMaterialUsage,
-    submitRemainingMaterials,
     getOrderLinkStatus,
     updateOrderLink,
     deleteOrderLink,

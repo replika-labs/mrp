@@ -54,7 +54,6 @@ model Material {
 
   // Relations
   materialMovements    MaterialMovement[]
-  remainingMaterials   RemainingMaterial[]
   products             Product[]
   purchaseLogs         PurchaseLog[]
 
@@ -232,20 +231,7 @@ model ProductProgressPhoto {
   @@map("product_progress_photos")
 }
 
-model RemainingMaterial {
-  id          Int      @id @default(autoincrement())
-  materialId  Int      @map("materialId")
-  quantity    Decimal  @db.Decimal(10, 3)
-  unit        String   @default("pcs")
-  notes       String?
-  createdAt   DateTime @default(now()) @map("createdAt")
-  updatedAt   DateTime @updatedAt @map("updatedAt")
 
-  // Relations
-  material Material @relation(fields: [materialId], references: [id])
-
-  @@map("remaining_materials")
-}
 
 
 

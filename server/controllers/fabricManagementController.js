@@ -95,17 +95,12 @@ const getAllMaterials = async (req, res) => {
                 take: 5 // Last 5 received purchases for average
             })
 
-            // Check if material can be deleted (has no movements or remaining materials)
-            const [hasMovements, hasRemainingMaterials] = await Promise.all([
-                prisma.materialMovement.count({
-                    where: { materialId: material.id }
-                }),
-                prisma.remainingMaterial.count({
-                    where: { materialId: material.id }
-                })
-            ])
+            // Check if material can be deleted (has no movements)
+            const hasMovements = await prisma.materialMovement.count({
+                where: { materialId: material.id }
+            })
 
-            const canDelete = hasMovements === 0 && hasRemainingMaterials === 0
+            const canDelete = hasMovements === 0
 
             const latestPurchase = material.purchaseLogs[0]
             const avgPrice = recentPurchases.length > 0
@@ -145,8 +140,7 @@ const getAllMaterials = async (req, res) => {
                 avgPrice: avgPrice,
                 // Deletion info
                 canDelete: canDelete,
-                hasMovements: hasMovements > 0,
-                hasRemainingMaterials: hasRemainingMaterials > 0
+                hasMovements: hasMovements > 0
             }
         }))
 
@@ -443,18 +437,14 @@ const deleteMaterial = async (req, res) => {
             return res.status(404).json({ message: 'Material not found' })
         }
 
-        // Check if material has related records (material movements, remaining materials)
+        // Check if material has related records (material movements)
         const hasMovements = await prisma.materialMovement.count({
             where: { materialId: parseInt(id) }
         })
 
-        const hasRemainingMaterials = await prisma.remainingMaterial.count({
-            where: { materialId: parseInt(id) }
-        })
-
-        if (hasMovements > 0 || hasRemainingMaterials > 0) {
+        if (hasMovements > 0) {
             return res.status(400).json({
-                message: 'Cannot delete material with existing movements or remaining material records'
+                message: 'Cannot delete material with existing movement records'
             })
         }
 

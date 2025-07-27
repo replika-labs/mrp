@@ -14,7 +14,7 @@ const productRoutes = require('./routes/productRoutes');
 const { protect, adminOnly } = require('./middleware/authMiddleware');
 const materialMovementRoutes = require('./routes/materialMovementRoutes');
 const progressReportRoutes = require('./routes/progressReportRoutes');
-const remainingMaterialRoutes = require('./routes/remainingMaterialRoutes');
+
 const orderLinkRoutes = require('./routes/orderLinkRoutes');
 const userRoutes = require('./routes/userRoutes');
 const purchaseLogRoutes = require('./routes/purchaseLogRoutes');
@@ -72,7 +72,7 @@ app.use('/api/orders-management', ordersManagementRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/material-movements', materialMovementRoutes);
 app.use('/api/progress-reports', progressReportRoutes);
-app.use('/api/remaining-materials', remainingMaterialRoutes);
+
 app.use('/api/order-links', orderLinkRoutes);
 app.use('/api/purchase-logs', purchaseLogRoutes);
 app.use('/api/materials-management', materialsManagementRoutes);

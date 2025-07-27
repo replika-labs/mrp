@@ -5,7 +5,7 @@ const {
   createOrderLink,
   submitProgress,
   recordMaterialUsage,
-  submitRemainingMaterials,
+
   getOrderLinkStatus,
   updateOrderLink,
   deleteOrderLink
@@ -29,7 +29,7 @@ router.post('/:token/progress', submitProgress);
 router.post('/:token/materials', recordMaterialUsage);
 
 // POST /api/order-links/:token/remaining-materials - Submit remaining material report
-router.post('/:token/remaining-materials', submitRemainingMaterials);
+
 
 // PUT /api/order-links/:id - Update order link
 router.put('/:id', protect, adminOnly, updateOrderLink);
