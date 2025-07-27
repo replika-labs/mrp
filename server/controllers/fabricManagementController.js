@@ -209,7 +209,7 @@ const getMaterialById = async (req, res) => {
                 purchaseLogs: {
                     orderBy: { purchaseDate: 'desc' },
                     include: {
-                        contactNotes: true
+        
                     }
                 }
             }

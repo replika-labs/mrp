@@ -75,7 +75,7 @@ async function main() {
                     unit: 'meter',
                     qtyOnHand: 100.0,
                     minStock: 10.0,
-                    maxStock: 200.0,
+                    maxStock: 9.0,
                     reorderPoint: 20.0,
                     reorderQty: 50.0,
                     location: 'Fabric Storage A1',
@@ -187,7 +187,7 @@ async function main() {
                     description: 'Decorative and functional hijab pins',
                     code: generateMaterialCode(500, 'Hijab Pins'),
                     unit: 'pcs',
-                    qtyOnHand: 500.0,
+                    qtyOnHand: 49.0,
                     minStock: 50.0,
                     maxStock: 1000.0,
                     reorderPoint: 100.0,
@@ -874,65 +874,6 @@ async function main() {
         }
 
         console.log('✓ Progress reports created for order tracking')
-
-        // Create contact notes for business communications
-        const contactNotesData = [
-            {
-                contactId: 1, // Siti Aminah (worker)
-                orderId: createdOrders[1].id,
-                createdBy: adminUser.id,
-                noteType: 'GENERAL',
-                subject: 'Progress Update Meeting',
-                content: 'Met with Siti to discuss Order ORD-000002 progress. She confirmed 60 pieces completed and expects to finish remaining 40 pieces by next week. Quality is excellent.',
-                isImportant: false,
-                createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
-            },
-            {
-                contactId: 2, // Premium Textile Indonesia (supplier)
-                createdBy: adminUser.id,
-                noteType: 'PURCHASE',
-                subject: 'Bulk Fabric Order Discussion',
-                content: 'Negotiated pricing for next month chiffon fabric order. Secured 5% bulk discount for orders above 200 meters. Delivery scheduled for next Friday.',
-                isImportant: true,
-                createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
-            },
-            {
-                contactId: 5, // Hijab Boutique Jakarta (customer)
-                orderId: createdOrders[3].id,
-                createdBy: adminUser.id,
-                noteType: 'ORDER',
-                subject: 'Special Requirements Discussion',
-                content: 'Customer requested specific color combinations for boutique order. Confirmed: 10 pieces in dusty pink, 10 in sage green, 5 in navy blue for each product type.',
-                isImportant: true,
-                createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
-            },
-            {
-                contactId: 7, // Fatimah Zahra (designer)
-                createdBy: adminUser.id,
-                noteType: 'GENERAL',
-                subject: 'New Design Ideas',
-                content: 'Fatimah presented new embroidered edge designs for premium collection. Samples look promising for next season launch.',
-                isImportant: false,
-                createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000)
-            }
-        ]
-
-        for (const noteData of contactNotesData) {
-            const existingNote = await prisma.contactNote.findFirst({
-                where: {
-                    contactId: noteData.contactId,
-                    subject: noteData.subject
-                }
-            })
-
-            if (!existingNote) {
-                await prisma.contactNote.create({
-                    data: noteData
-                })
-            }
-        }
-
-        console.log('✓ Contact notes created for business communications')
 
         // Create product photos for catalog
         const productPhotosData = [

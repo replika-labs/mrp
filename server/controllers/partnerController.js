@@ -111,34 +111,7 @@ const getContactById = asyncHandler(async (req, res) => {
       id: parseInt(req.params.id),
       isActive: true
     },
-    include: {
-      contactNotes: {
-        include: {
-          createdByUser: {
-            select: {
-              id: true,
-              name: true,
-              email: true
-            }
-          },
-          order: {
-            select: {
-              id: true,
-              orderNumber: true,
-              status: true
-            }
-          },
-          purchaseLog: {
-            select: {
-              id: true,
-              purchasedDate: true,
-              supplier: true
-            }
-          }
-        },
-        orderBy: { createdAt: 'desc' }
-      }
-    }
+
   });
 
   if (!contact) {
@@ -491,71 +464,7 @@ const searchContacts = asyncHandler(async (req, res) => {
   }
 });
 
-// @desc    Add contact note
-// @route   POST /api/contacts/:id/notes
-// @access  Private
-const addContactNote = asyncHandler(async (req, res) => {
-  const { content, orderId, purchaseLogId } = req.body;
-  const contactId = parseInt(req.params.id);
 
-  if (!content) {
-    return res.status(400).json({
-      success: false,
-      message: 'Note content is required'
-    });
-  }
-
-  try {
-    const contact = await prisma.contact.findFirst({
-      where: {
-        id: contactId,
-        isActive: true
-      }
-    });
-
-    if (!contact) {
-      return res.status(404).json({
-        success: false,
-        message: 'Contact not found'
-      });
-    }
-
-    const noteData = {
-      content,
-      contactId,
-      createdBy: req.user.id
-    };
-
-    if (orderId) noteData.orderId = parseInt(orderId);
-    if (purchaseLogId) noteData.purchaseLogId = parseInt(purchaseLogId);
-
-    const note = await prisma.contactNote.create({
-      data: noteData,
-      include: {
-        createdByUser: {
-          select: {
-            id: true,
-            name: true,
-            email: true
-          }
-        }
-      }
-    });
-
-    res.status(201).json({
-      success: true,
-      message: 'Note added successfully',
-      note
-    });
-  } catch (error) {
-    console.error('Error adding contact note:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to add note',
-      error: error.message
-    });
-  }
-});
 
 module.exports = {
   getContacts,
@@ -565,6 +474,5 @@ module.exports = {
   deleteContact,
   toggleContactStatus,
   getContactsByType,
-  searchContacts,
-  addContactNote
+  searchContacts
 }; 

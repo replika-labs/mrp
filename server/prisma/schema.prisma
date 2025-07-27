@@ -30,7 +30,6 @@ model User {
   materialMovements      MaterialMovement[]
   progressReports        ProgressReport[]
   orderLinks             OrderLink[]
-  createdContactNotes    ContactNote[]          @relation("ContactNoteCreatedBy")
 
   @@map("users")
 }
@@ -117,7 +116,6 @@ model Order {
   materialMovements    MaterialMovement[]
   progressReports      ProgressReport[]
   orderLink            OrderLink?
-  contactNotes         ContactNote[]
 
   @@map("orders")
 }
@@ -341,7 +339,6 @@ model PurchaseLog {
   // Relations
   material      Material          @relation(fields: [materialId], references: [id])
   movement      MaterialMovement?
-  contactNotes  ContactNote[]
 
   @@map("purchase_logs")
 }
@@ -362,36 +359,11 @@ model Contact {
 
   // Relations
   workerOrders Order[]       @relation("WorkerContactOrders")
-  contactNotes ContactNote[]
 
   @@map("contacts")
 }
 
-model ContactNote {
-  id            Int       @id @default(autoincrement())
-  contactId     Int       @map("contactId")
-  orderId       Int?      @map("orderId")
-  purchaseLogId Int?      @map("purchaseLogId")
-  createdBy     Int       @map("createdBy")
-  noteType      NoteType
-  subject       String?
-  content       String
-  followUpDate  DateTime? @map("followUpDate")
-  isImportant   Boolean   @default(false) @map("isImportant")
-  tags          String?
-  attachmentPath String?  @map("attachmentPath")
-  isActive      Boolean   @default(true) @map("isActive")
-  createdAt     DateTime  @default(now()) @map("createdAt")
-  updatedAt     DateTime  @updatedAt @map("updatedAt")
 
-  // Relations
-  contact       Contact      @relation(fields: [contactId], references: [id])
-  order         Order?       @relation(fields: [orderId], references: [id])
-  purchaseLog   PurchaseLog? @relation(fields: [purchaseLogId], references: [id])
-  createdByUser User         @relation("ContactNoteCreatedBy", fields: [createdBy], references: [id])
-
-  @@map("contact_notes")
-}
 
 // Enums
 enum UserRole {
@@ -471,11 +443,4 @@ enum ContactType {
   OTHER    @map("other")
 }
 
-enum NoteType {
-  GENERAL    @map("general")
-  FOLLOW_UP  @map("follow_up")
-  COMPLAINT  @map("complaint")
-  ORDER      @map("order")
-  PURCHASE   @map("purchase")
-  PAYMENT    @map("payment")
-} 
+ 

@@ -129,16 +129,7 @@ const getPurchaseLogById = async (req, res) => {
                     }
                 },
                 movement: true,
-                contactNotes: {
-                    include: {
-                        createdByUser: {
-                            select: {
-                                id: true,
-                                name: true
-                            }
-                        }
-                    }
-                }
+
             }
         });
 

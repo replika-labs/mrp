@@ -36,7 +36,6 @@ function ContactManagement() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
-  const [showNotesModal, setShowNotesModal] = useState(false);
   const [selectedContact, setSelectedContact] = useState(null);
 
   // Form states
@@ -51,16 +50,7 @@ function ContactManagement() {
     notes: ''
   });
 
-  // Contact notes states
-  const [contactNotes, setContactNotes] = useState([]);
-  const [noteFormData, setNoteFormData] = useState({
-    noteType: 'general',
-    title: '',
-    note: '',
-    priority: 'medium',
-    isFollowUpRequired: false,
-    followUpDate: ''
-  });
+
 
   // Helper functions for auto-clearing messages
   const setSuccessWithTimeout = (message) => {
@@ -141,14 +131,7 @@ function ContactManagement() {
     }
   };
 
-  // Handle note form input changes
-  const handleNoteInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setNoteFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
-  };
+
 
   // Create contact
   const handleCreateContact = async (e) => {
@@ -246,57 +229,7 @@ function ContactManagement() {
     }
   };
 
-  // Fetch contact notes
-  const fetchContactNotes = async (contactId) => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:8080/api/contacts/${contactId}/notes`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch contact notes');
-      }
-
-      const data = await response.json();
-      setContactNotes(data.notes);
-    } catch (error) {
-      console.error('Error fetching contact notes:', error);
-      setErrorWithTimeout('Failed to load contact notes');
-    }
-  };
-
-  // Create contact note
-  const handleCreateNote = async (e) => {
-    e.preventDefault();
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:8080/api/contacts/${selectedContact.id}/notes`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(noteFormData)
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to create note');
-      }
-
-      const data = await response.json();
-      setSuccessWithTimeout('Note created successfully');
-      resetNoteForm();
-      fetchContactNotes(selectedContact.id);
-    } catch (error) {
-      console.error('Error creating note:', error);
-      setErrorWithTimeout(error.message);
-    }
-  };
 
   // Reset forms
   const resetForm = () => {
@@ -312,16 +245,7 @@ function ContactManagement() {
     });
   };
 
-  const resetNoteForm = () => {
-    setNoteFormData({
-      noteType: 'general',
-      title: '',
-      note: '',
-      priority: 'medium',
-      isFollowUpRequired: false,
-      followUpDate: ''
-    });
-  };
+
 
   // Modal handlers
   const openCreateModal = () => {
@@ -349,12 +273,7 @@ function ContactManagement() {
     setShowViewModal(true);
   };
 
-  const openNotesModal = (contact) => {
-    setSelectedContact(contact);
-    fetchContactNotes(contact.id);
-    resetNoteForm();
-    setShowNotesModal(true);
-  };
+
 
   // WhatsApp link generator
   const getWhatsAppUrl = (phone) => {
@@ -1119,184 +1038,7 @@ function ContactManagement() {
         </div>
       )}
 
-      {/* Contact Notes Modal */}
-      {showNotesModal && selectedContact && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-10 mx-auto p-5 border w-11/12 md:w-4/5 lg:w-3/4 shadow-lg rounded-md bg-white max-h-screen overflow-y-auto">
-            <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
-                Contact Notes - {selectedContact.name}
-              </h3>
 
-              {/* Add Note Form */}
-              <div className="bg-gray-50 p-4 rounded-lg mb-6">
-                <h4 className="text-md font-medium text-gray-800 mb-3">Add New Note</h4>
-                <form onSubmit={handleCreateNote} className="space-y-3">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Note Type
-                      </label>
-                      <select
-                        name="noteType"
-                        value={noteFormData.noteType}
-                        onChange={handleNoteInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      >
-                        <option value="general">General</option>
-                        <option value="order">Order</option>
-                        <option value="purchase">Purchase</option>
-                        <option value="performance">Performance</option>
-                        <option value="communication">Communication</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Priority
-                      </label>
-                      <select
-                        name="priority"
-                        value={noteFormData.priority}
-                        onChange={handleNoteInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      >
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                        <option value="urgent">Urgent</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Title
-                      </label>
-                      <input
-                        type="text"
-                        name="title"
-                        value={noteFormData.title}
-                        onChange={handleNoteInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Note *
-                    </label>
-                    <textarea
-                      name="note"
-                      value={noteFormData.note}
-                      onChange={handleNoteInputChange}
-                      required
-                      rows="3"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div className="flex items-center space-x-4">
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        name="isFollowUpRequired"
-                        checked={noteFormData.isFollowUpRequired}
-                        onChange={handleNoteInputChange}
-                        className="mr-2"
-                      />
-                      Follow-up required
-                    </label>
-
-                    {noteFormData.isFollowUpRequired && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Follow-up Date
-                        </label>
-                        <input
-                          type="date"
-                          name="followUpDate"
-                          value={noteFormData.followUpDate}
-                          onChange={handleNoteInputChange}
-                          className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex justify-end">
-                    <button
-                      type="submit"
-                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                    >
-                      Add Note
-                    </button>
-                  </div>
-                </form>
-              </div>
-
-              {/* Notes List */}
-              <div className="space-y-4 max-h-96 overflow-y-auto">
-                {contactNotes.length === 0 ? (
-                  <p className="text-gray-500 text-center py-8">No notes found for this contact</p>
-                ) : (
-                  contactNotes.map((note) => (
-                                            <div key={note.id} className="bg-white border border-gray-300 rounded-lg p-4">
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex items-center space-x-2">
-                          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${note.noteType === 'general' ? 'bg-gray-600 text-white' :
-                            note.noteType === 'order' ? 'bg-blue-600 text-white' :
-                              note.noteType === 'purchase' ? 'bg-green-600 text-white' :
-                                note.noteType === 'performance' ? 'bg-yellow-600 text-white' :
-                                  'bg-purple-600 text-white'
-                            }`}>
-                            {note.noteType}
-                          </span>
-                          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${note.priority === 'low' ? 'bg-gray-600 text-white' :
-                            note.priority === 'medium' ? 'bg-blue-600 text-white' :
-                              note.priority === 'high' ? 'bg-orange-600 text-white' :
-                                'bg-red-600 text-white'
-                            }`}>
-                            {note.priority}
-                          </span>
-                        </div>
-                        <span className="text-xs text-gray-500">
-                          {formatDate(note.createdAt)}
-                        </span>
-                      </div>
-
-                      {note.title && (
-                        <h5 className="font-medium text-gray-900 mb-2">{note.title}</h5>
-                      )}
-
-                      <p className="text-gray-700 mb-2">{note.note}</p>
-
-                      {note.isFollowUpRequired && note.followUpDate && (
-                        <div className="text-sm text-orange-600">
-                          📅 Follow-up required by: {new Date(note.followUpDate).toLocaleDateString()}
-                        </div>
-                      )}
-
-                      <div className="text-xs text-gray-500 mt-2">
-                        Created by: {note.CreatedByUser?.name || 'Unknown'}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              <div className="flex justify-end pt-6">
-                <button
-                  onClick={() => setShowNotesModal(false)}
-                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Success Modal */}
       {showSuccessModal && (

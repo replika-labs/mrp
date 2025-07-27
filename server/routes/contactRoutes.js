@@ -9,7 +9,7 @@ const {
   toggleContactStatus,
   getContactsByType,
   searchContacts,
-  addContactNote
+
 } = require('../controllers/partnerController');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -34,7 +34,7 @@ router.get('/type/:contactType', getContactsByType);
 router.get('/search/:searchTerm', searchContacts);
 
 // Notes management
-router.post('/:id/notes', addContactNote);
+
 
 // Placeholder routes for future implementation
 router.get('/:id/notes', (req, res) => {
