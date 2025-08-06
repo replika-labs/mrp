@@ -756,7 +756,7 @@ export default function OrderLinkPage({ params }) {
       <footer className="bg-white/80 border-t border-gray-100 py-8 mt-8 rounded-t-3xl shadow-inner">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <p className="text-center text-gray-400 text-sm">
-            &copy; {new Date().getFullYear()} WMS System. All rights reserved.
+            &copy; {new Date().getFullYear()} MRP System. All rights reserved.
           </p>
         </div>
       </footer>

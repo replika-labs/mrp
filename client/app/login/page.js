@@ -24,22 +24,36 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(''); // Clear previous errors
-    console.log("object");
-
+    
     try {
+      // Show loading state (you could add a loading state if you want)
       const res = await axios.post('/api/auth/login', { email, password });
-      console.log('Login Response:', res.data);
-      // Assuming the backend returns a token and user info on success
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('user', JSON.stringify(res.data.user));
-
-      // Redirect based on user role (example)
-      router.push('/dashboard');
-
+      
+      if (res.data && res.data.token) {
+        // Store auth data in localStorage
+        localStorage.setItem('token', res.data.token);
+        localStorage.setItem('user', JSON.stringify(res.data.user));
+        
+        // Redirect to dashboard
+        router.push('/dashboard');
+      } else {
+        // Handle unexpected response format
+        throw new Error('Invalid server response');
+      }
     } catch (err) {
       console.error('Login Error:', err.response ? err.response.data : err.message);
-      setError(err.response?.data?.message || 'Login failed');
-      setTimeout(() => setError(''), 3000);
+      
+      // Display appropriate error message in a more friendly way
+      if (err.response?.status === 401) {
+        setError('Email atau kata sandi tidak sesuai. Silakan coba lagi.');
+      } else if (err.response?.status === 429) {
+        setError('Terlalu banyak percobaan login. Silakan tunggu beberapa saat.');
+      } else {
+        setError(err.response?.data?.message || 'Gagal masuk. Mohon coba lagi nanti.');
+      }
+      
+      // Clear error after some time
+      setTimeout(() => setError(''), 5000);
     }
   };
 
@@ -61,8 +75,8 @@ export default function LoginPage() {
                 <div className="text-3xl">🏢</div>
               </div>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-            <p className="text-gray-600">Sign in to your WMS account</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Halo, Selamat Datang!</h1>
+            <p className="text-gray-600">Silakan masuk untuk melanjutkan</p>
           </div>
 
           {/* Error Message */}
@@ -82,7 +96,7 @@ export default function LoginPage() {
             {/* Email Field */}
             <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-gray-300 shadow-sm">
               <label htmlFor="email" className="text-xs font-semibold text-gray-500 block mb-2 uppercase tracking-wider">
-                Email Address
+                Email
               </label>
               <input
                 type="email"
@@ -90,7 +104,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full h-12 px-4 py-3 text-sm bg-white/80 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-200"
-                placeholder="Enter your email address"
+                placeholder="Masukkan email Anda"
                 required
               />
             </div>
@@ -98,7 +112,7 @@ export default function LoginPage() {
             {/* Password Field */}
             <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-gray-300 shadow-sm">
               <label htmlFor="password" className="text-xs font-semibold text-gray-500 block mb-2 uppercase tracking-wider">
-                Password
+                Kata Sandi
               </label>
               <input
                 type="password"
@@ -106,7 +120,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full h-12 px-4 py-3 text-sm bg-white/80 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-200"
-                placeholder="Enter your password"
+                placeholder="Masukkan kata sandi Anda"
                 required
               />
             </div>
@@ -116,31 +130,31 @@ export default function LoginPage() {
                 type="submit"
               className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
-              Sign In
+              Masuk
               </button>
           </form>
 
           {/* Footer */}
           <div className="mt-8 text-center">
             <p className="text-sm text-gray-500">
-              Warehouse Management System v2.0
+              Sistem Produksi dan Inventaris v2.0
             </p>
             <div className="mt-4 flex items-center justify-center space-x-4 text-xs text-gray-400">
-              <span>© 2024 WMS</span>
+              <span>© 2024</span>
               <span>•</span>
-              <span>Secure Login</span>
+              <span>Login Aman</span>
             </div>
           </div>
         </div>
 
         {/* Additional Info Card */}
         <div className="mt-6 bg-gradient-to-br from-blue-600/95 via-blue-700/90 to-blue-600/95 backdrop-blur-xl rounded-3xl border border-gray-300 shadow-xl p-6 text-white">
-          <h3 className="text-lg font-bold mb-3">System Features</h3>
+          <h3 className="text-lg font-bold mb-3">Fitur Sistem</h3>
           <ul className="text-sm space-y-2 opacity-90">
-            <li>• Advanced inventory management</li>
-            <li>• Real-time order tracking</li>
-            <li>• Material stock monitoring</li>
-            <li>• Progress reporting system</li>
+            <li>• Kelola persediaan barang dengan mudah</li>
+            <li>• Pantau status pesanan secara langsung</li>
+            <li>• Lacak stok bahan dengan cepat</li>
+            <li>• Laporan kemajuan produksi terintegrasi</li>
           </ul>
         </div>
       </div>

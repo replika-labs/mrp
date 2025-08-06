@@ -43,24 +43,26 @@ export default function Navbar() {
         // Close dropdown immediately to prevent UI conflicts
         setIsDropdownOpen(false)
         
-        // Use setTimeout to ensure state updates are processed
-        setTimeout(() => {
-            try {
-                // Clear localStorage
-        localStorage.removeItem('token')
-        localStorage.removeItem('user')
-                
-                // Clear local state
-                setUser(null)
-                
-                // Force reload to ensure clean state
+        try {
+            // Clear localStorage
+            localStorage.removeItem('token')
+            localStorage.removeItem('user')
+            
+            // Clear local state
+            setUser(null)
+            
+            // Use router for client-side navigation first
+            router.push('/login')
+            
+            // Then force a full page reload to ensure clean state
+            setTimeout(() => {
                 window.location.href = '/login'
-            } catch (error) {
-                console.error('Error during logout:', error)
-                // Fallback: still try to redirect
-        router.push('/login')
-            }
-        }, 50)
+            }, 100)
+        } catch (error) {
+            console.error('Error during logout:', error)
+            // Fallback: direct browser navigation
+            window.location.href = '/login'
+        }
     }
 
     const toggleDropdown = () => {
@@ -158,7 +160,7 @@ export default function Navbar() {
                         {/* Menu Items */}
                         <div className="p-2">
                             {/* Logout */}
-                                    <button
+                                <button
                                         onClick={(e) => {
                                             e.preventDefault();
                                             e.stopPropagation();
@@ -167,14 +169,14 @@ export default function Navbar() {
                                         type="button"
                                 className="flex items-center gap-3 p-3 rounded-xl hover:bg-red-50 transition-colors text-red-600 w-full cursor-pointer"
                                     >
-                                <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-red-50 pointer-events-none">
-                                    <LogOut className="h-4 w-4 text-red-600 pointer-events-none" />
-                                </div>
-                                <div className="flex-1 text-left pointer-events-none">
-                                    <div className="font-medium pointer-events-none">Logout</div>
-                                    <div className="text-xs text-red-500 pointer-events-none">Sign out of your account</div>
-                                </div>
-                                    </button>
+                                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-red-50 pointer-events-none">
+                                        <LogOut className="h-4 w-4 text-red-600 pointer-events-none" />
+                                    </div>
+                                    <div className="flex-1 text-left pointer-events-none">
+                                        <div className="font-medium pointer-events-none">Logout</div>
+                                        <div className="text-xs text-red-500 pointer-events-none">Sign out of your account</div>
+                                    </div>
+                                </button>
                                 </div>
                             </div>
                         </>

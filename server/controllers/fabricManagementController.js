@@ -97,8 +97,8 @@ const getAllMaterials = async (req, res) => {
 
             // Check if material can be deleted (has no movements)
             const hasMovements = await prisma.materialMovement.count({
-                where: { materialId: material.id }
-            })
+                    where: { materialId: material.id }
+                })
 
             const canDelete = hasMovements === 0
 

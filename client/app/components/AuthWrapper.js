@@ -11,25 +11,35 @@ export default function AuthWrapper({ children, requiredRole }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
+    // Use try-catch for all localStorage operations as they can fail
+    try {
+      const token = localStorage.getItem('token');
+      const storedUser = localStorage.getItem('user');
 
-    // Skip authentication check if already on login page
-    if (pathname === '/login') {
-      setLoading(false);
-      return;
-    }
+      // Skip authentication check if already on login or register page
+      if (pathname === '/login' || pathname === '/register') {
+        setLoading(false);
+        return;
+      }
 
-    if (!token || !storedUser) {
-      // Not authenticated, redirect to login
-      setLoading(false);
-      router.push('/login');
-      return;
-    }
+      if (!token || !storedUser) {
+        // Not authenticated, redirect to login
+        console.log("No auth token found, redirecting to login");
+        setLoading(false);
+        router.push('/login');
+        return;
+      }
 
-      setIsAuthenticated(true);
+      // Try to parse the user data
       try {
         const user = JSON.parse(storedUser);
+        
+        // Validate user object has minimal required fields
+        if (!user || !user.id) {
+          throw new Error("Invalid user data");
+        }
+        
+        setIsAuthenticated(true);
 
         // Check role if required
         if (requiredRole) {
@@ -38,14 +48,13 @@ export default function AuthWrapper({ children, requiredRole }) {
           } else {
             // Authenticated but not authorized for this role
             console.warn(`User with role ${user.role} attempted to access route requiring ${requiredRole}`);
-            // Redirect to a default authenticated page or unauthorized page
-            router.push('/dashboard'); // Redirect non-admins from admin page
+            // Redirect to a default authenticated page
+            router.push('/dashboard');
           }
         } else {
           // No specific role required, just authenticated
           setIsAuthorized(true);
         }
-
       } catch (e) {
         console.error("Failed to parse user from localStorage", e);
         // Data corrupted, clear and redirect
@@ -53,8 +62,13 @@ export default function AuthWrapper({ children, requiredRole }) {
         localStorage.removeItem('user');
         router.push('/login');
       }
-    
-    setLoading(false);
+    } catch (e) {
+      // Handle any localStorage access errors
+      console.error("Error accessing localStorage", e);
+      router.push('/login');
+    } finally {
+      setLoading(false);
+    }
 
   }, [router, pathname, requiredRole]);
 
